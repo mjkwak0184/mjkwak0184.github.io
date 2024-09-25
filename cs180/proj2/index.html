@@ -205,9 +205,12 @@
                 </i>
             </span>
         </div>
+        <h3>Derivative of Gaussian Filter</h3>
         <p>
-            I also verify that the same process can be achieved by a single convolution operation with the derivative of Gaussian filter.
+            The process of blurring an image with a Gaussian filter and then taking the derivative of the blurred
+            image can also be performed by a single convolution operation with the derivative of Gaussian filter.
             This can improve the efficiency of the process by reducing the number of convolution operations on original image. 
+            I verify that this process is equivalent to running Gaussian blur and then taking the gradient magnitude of the blurred image.
         </p>
         <div class="image-container">
             <div class="images">
@@ -231,13 +234,6 @@
                 </i>
             </span>
         </div>
-        <h3>Derivative of Gaussian Filter</h3>
-        <p>
-            The process of blurring an image with a Gaussian filter and then taking the derivative of the blurred
-            image can also be performed by a single convolution operation with the derivative of Gaussian filter.
-            The derivative of Gaussian filter can be obtained by taking the derivative of the Gaussian filter. 
-            
-        </p>
 
         <h2>Part II - Fun with Frequencies</h2>
         <h3>Image Sharpening</h3>
