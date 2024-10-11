@@ -236,7 +236,9 @@
             240 images of 40 Danish people in different orientation and lighting, alongside with their correspondences.
             I computed the mean face by taking the average of the points and the triangulation of the mean points, 
             and then I morphed each image into the triangulation. The left image below shows the mean face for all 240
-            images, and the right two images show the mean face for the front and side views. 
+            images, and the right two images show the mean face for the front and side views. The second row shows the
+            mean image for male and female images separately. Since there are much more male images than female images, 
+            I also computed the mean face by equally weighting the male average and female average images, as shown below.
         </p>
         <div class="image-container">
             <div class="images">
@@ -288,7 +290,11 @@
 
         <h3>Part 5. Caricatures: Extrapolating from the mean</h3>
         <p>
-            For this part, I use the morph function to morph my image into different subsamples of Danes dataset. 
+            For this part, I applied the morph function to extrapolate from the mean face of the Danes dataset. To make the
+            images above more natural, I took the midpoint image of my face shape and average Danes face shape, resulting in
+            the image below. For bells and whistles, I also computed the average of the smiling Danes face and morphed my
+            face to the smiling Danes face with 50% appearance. Then, I morphed the smiling Danes face shape to my face shape, 
+            making the average Danes face look sad.
         </p>
         <div class="image-container">
             <div class="images">
