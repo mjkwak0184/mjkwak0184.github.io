@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CS 180 Project 4A</title>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <style>
+
+            body {
+                padding: 20px;
+            }
+
+            .image-container, .image-selector {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+            }
+
+            .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
+                text-align: center;
+            }
+
+            .image-container .description, .image-selector .description {
+                margin-bottom: 25px;
+            }
+
+            .math {
+                display: block;
+                width: 100%;
+                text-align: center;
+            }
+
+            .images {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+            
+            select {
+                width: fit-content;
+                margin: 0 auto;
+                padding: 16px 26px;
+                font-size: 16pt;
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body onload="onload();">
+        <h1>Image Warping and Mosaicing</h1>
+        <h3>Part 1 & 2. Shoot the Pictures and Recover Homographies</h3>
+        <p>
+            In this part, I took photos to be used in this project, which are shown in each respective part in this project. 
+            These photos are taken by fixing the center of projection and rotating the camera around the center of projection.
+            For each series of images, I took two photos that overlap about 50% with the previous photo. Then, I used the provided 
+            <a href="https://cal-cs180.github.io/fa23/hw/proj3/tool.html" target="_blank">Correspondence Tool</a> to define
+            correspondences between the photos. The correspondences are used to recover homographies between the photos using
+            the least squares method. To that end, we define the homography matrix \( H \), and solve for the unknowns \( a, b, c, d, e, f, g, h \).
+        </p>
+        <p class="math">
+
+            \[
+                \begin{bmatrix}
+                a & b & c \\
+                d & e & f \\
+                g & h & 1 \\
+                \end{bmatrix}
+                \begin{bmatrix}
+                x \\
+                y \\
+                1
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                wx' \\
+                wy' \\
+                w
+                \end{bmatrix}
+                \]
+
+                If we expand this out, we have the following system of equations:
+
+                \[
+                \begin{aligned}
+                ax + by + c &= wx' \\
+                dx + ey + f &= wy' \\
+                gx + hy + 1 &= w
+                \end{aligned}
+                \]
+
+                This implies:
+
+                \[
+                \begin{aligned}
+                ax + by + c &= (gx + hy + 1)x' \\
+                dx + ey + f &= (gx + hy + 1)y'
+                \end{aligned}
+                \]
+
+                Expanding further:
+
+                \[
+                \begin{aligned}
+                ax + by + c - gxx' - hyx' &= x' \\
+                dx + ey + f - gxy' - hyy' &= y'
+                \end{aligned}
+                \]
+
+                This can be written as the following matrix form:
+
+                \[
+                \begin{bmatrix}
+                x & y & 1 & 0 & 0 & 0 & -xx' & -yx' \\
+                0 & 0 & 0 & x & y & 1 & -xy' & -yy' \\
+                \end{bmatrix}
+                \begin{bmatrix}
+                a \\
+                b \\
+                c \\
+                d \\
+                e \\
+                f \\
+                g \\
+                h
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                x' \\
+                y'
+                \end{bmatrix}
+            \]
+        </p>
+        <p>
+            When the number of point correspondences \( n \) exceeds four, the system of equations becomes overdetermined, 
+            meaning there are more equations than unknowns. In such cases, it is generally impossible to find an exact 
+            solution that satisfies all equations simultaneously due to measurement noise and inaccuracies.
+            To address this, we use the least squares method, which seeks to find the parameter vector \( \mathbf{h} \)
+            that minimizes the sum of the squared differences between the left and right sides of the equations.
+            Mathematically, this can be expressed as:
+        </p>
+        <p class="math">
+
+        \[
+        \min_{\mathbf{h}} \|A\mathbf{h} - \mathbf{b}\|_2^2,\ \ \mathbf{h} = \begin{bmatrix} a & b & c & d & e & f & g & h \end{bmatrix}^\top
+        \]
+        Using least squares:
+        \[
+        \mathbf{h} = (A^\top A)^{-1} A^\top \mathbf{b}
+        \]
+
+Once vector \( \mathbf{h} \) is found, the homography matrix \( H \) can be reconstructed.
+
+\[
+H = \begin{bmatrix}
+a & b & c \\
+d & e & f \\
+g & h & 1 \\
+\end{bmatrix}
+\]
+        </p>
+        <h3>Part 3. Warping Images and Image Rectification</h3>
+        <p>
+            In this part, I warped the images using the homographies recovered in the previous part. In the correspondences tool,
+            I selected four points that define the corners of the rectification region. Then, I manually defined the rectangular 
+            region where the corners should be warped to. The homography matrix is used to warp the image to the rectangular region.
+            Here are some results:
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/chocolate.jpeg" alt="Chocolate Ad" height="320">
+                    <p class="label">Chocolate Ad</p>
+                </div>
+                <div class="image">
+                    <img src="images/chocolate_rectified.png" alt="Rectified Chocolate Ad" height="320">
+                    <p class="label">Rectified Chocolate Ad</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/tacos.jpeg" alt="Menu" height="320">
+                    <p class="label">Taco Menu</p>
+                </div>
+                <div class="image">
+                    <img src="images/tacos_rectified.png" alt="Rectified Menu" height="320">
+                    <p class="label">Rectified Taco Menu</p>
+                </div>
+            </div>
+        </div>
+        <h3>Part 4. Blend the Images into a Mosaic</h3>
+        <p>
+            For this section I blended the images into a mosaic. I first warped the images to the same coordinate system using
+            the homographies recovered in the previous part. Then, I blended the images using two methods: naive blending and
+            Laplacian blending. Naive blending simply overlays the transformed image on top of reference image. Laplacian blending
+            uses a 2-level Gaussian stack (i.e. high and low frequency components) to blend the two images. For each example, I
+            created a custom mask for Laplacian blending. Here are some results:
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/lec_left.jpeg" alt="Lecture Left" height="220">
+                    <p class="label">Lecture Left</p>
+                </div>
+                <div class="image">
+                    <img src="images/lec_middle.jpeg" alt="Lecture Right" height="220">
+                    <p class="label">Lecture Right</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/lec_naive.png" alt="Naive Blend" height="220">
+                    <p class="label">Lecture Naive Blend</p>
+                </div>
+                <div class="image">
+                    <img src="images/lec_laplacian.png" alt="Laplacian Blend" height="220">
+                    <p class="label">Lecture Laplacian Blend</p>
+                </div>
+            </div>
+            <span class="description">
+                <i>
+                    Notice how Laplacian blend produces a smoother transition between the two images compared to naive blend,
+                    especially in the ceiling area.
+                </i>
+        </div>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/island_left.jpeg" alt="Islands Left" height="220">
+                    <p class="label">Islands Left</p>
+                </div>
+                <div class="image">
+                    <img src="images/island_right.jpeg" alt="Islands Right" height="220">
+                    <p class="label">Islands Right</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/island_naive.png" alt="Islands Naive Blend" height="220">
+                    <p class="label">Islands Naive Blend</p>
+                </div>
+                <div class="image">
+                    <img src="images/island_laplacian.png" alt="Islands Laplacian Blend" height="220">
+                    <p class="label">Islands Laplacian Blend</p>
+                </div>
+            </div>
+            <span class="description">
+                <i>
+                    In this example, the left and right photos have similar exposure, so both naive and Laplacian blending
+                    methods produce similar results.
+                </i>
+            </span>
+        </div>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/sf_left.jpeg" alt="SF Left" height="220">
+                    <p class="label">SF Left</p>
+                </div>
+                <div class="image">
+                    <img src="images/sf_right.jpeg" alt="SF Right" height="220">
+                    <p class="label">SF Right</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/sf_naive.png" alt="SF Naive Blend" height="220">
+                    <p class="label">SF Naive Blend</p>
+                </div>
+                <div class="image">
+                    <img src="images/sf_laplacian.png" alt="SF Laplacian Blend" height="220">
+                    <p class="label">SF Laplacian Blend</p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
