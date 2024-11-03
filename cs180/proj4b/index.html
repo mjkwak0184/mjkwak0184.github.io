@@ -1,0 +1,467 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CS 180 Project 4B</title>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <style>
+
+            body {
+                padding: 20px;
+            }
+
+            .image-container, .image-selector {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+            }
+
+            .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
+                text-align: center;
+            }
+
+            .image-container .description, .image-selector .description {
+                margin-bottom: 25px;
+            }
+
+            .math {
+                display: block;
+                width: 100%;
+                text-align: center;
+            }
+
+            .images {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+            
+            select {
+                width: fit-content;
+                margin: 0 auto;
+                padding: 16px 26px;
+                font-size: 16pt;
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body onload="onload();">
+        <h1>Auto Stitching Photo Mosaics</h1>
+        <h2>Project 4A - Image Warping and Mosaicing</h2>
+        <h3>Part 1 & 2. Shoot the Pictures and Recover Homographies</h3>
+        <p>
+            In this part, I took photos to be used in this project, which are shown in each respective part in this project. 
+            These photos are taken by fixing the center of projection and rotating the camera around the center of projection.
+            For each series of images, I took two photos that overlap about 50% with the previous photo. Then, I used the provided 
+            <a href="https://cal-cs180.github.io/fa23/hw/proj3/tool.html" target="_blank">Correspondence Tool</a> to define
+            correspondences between the photos. The correspondences are used to recover homographies between the photos using
+            the least squares method. To that end, we define the homography matrix \( H \), and solve for the unknowns \( a, b, c, d, e, f, g, h \).
+        </p>
+        <p class="math">
+
+            \[
+                \begin{bmatrix}
+                a & b & c \\
+                d & e & f \\
+                g & h & 1 \\
+                \end{bmatrix}
+                \begin{bmatrix}
+                x \\
+                y \\
+                1
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                wx' \\
+                wy' \\
+                w
+                \end{bmatrix}
+                \]
+
+                If we expand this out, we have the following system of equations:
+
+                \[
+                \begin{aligned}
+                ax + by + c &= wx' \\
+                dx + ey + f &= wy' \\
+                gx + hy + 1 &= w
+                \end{aligned}
+                \]
+
+                This implies:
+
+                \[
+                \begin{aligned}
+                ax + by + c &= (gx + hy + 1)x' \\
+                dx + ey + f &= (gx + hy + 1)y'
+                \end{aligned}
+                \]
+
+                Expanding further:
+
+                \[
+                \begin{aligned}
+                ax + by + c - gxx' - hyx' &= x' \\
+                dx + ey + f - gxy' - hyy' &= y'
+                \end{aligned}
+                \]
+
+                This can be written as the following matrix form:
+
+                \[
+                \begin{bmatrix}
+                x & y & 1 & 0 & 0 & 0 & -xx' & -yx' \\
+                0 & 0 & 0 & x & y & 1 & -xy' & -yy' \\
+                \end{bmatrix}
+                \begin{bmatrix}
+                a \\
+                b \\
+                c \\
+                d \\
+                e \\
+                f \\
+                g \\
+                h
+                \end{bmatrix}
+                =
+                \begin{bmatrix}
+                x' \\
+                y'
+                \end{bmatrix}
+            \]
+        </p>
+        <p>
+            When the number of point correspondences \( n \) exceeds four, the system of equations becomes overdetermined, 
+            meaning there are more equations than unknowns. In such cases, it is generally impossible to find an exact 
+            solution that satisfies all equations simultaneously due to measurement noise and inaccuracies.
+            To address this, we use the least squares method, which seeks to find the parameter vector \( \mathbf{h} \)
+            that minimizes the sum of the squared differences between the left and right sides of the equations.
+            Mathematically, this can be expressed as:
+        </p>
+        <p class="math">
+
+        \[
+        \min_{\mathbf{h}} \|A\mathbf{h} - \mathbf{b}\|_2^2,\ \ \mathbf{h} = \begin{bmatrix} a & b & c & d & e & f & g & h \end{bmatrix}^\top
+        \]
+        Using least squares:
+        \[
+        \mathbf{h} = (A^\top A)^{-1} A^\top \mathbf{b}
+        \]
+
+Once vector \( \mathbf{h} \) is found, the homography matrix \( H \) can be reconstructed.
+
+\[
+H = \begin{bmatrix}
+a & b & c \\
+d & e & f \\
+g & h & 1 \\
+\end{bmatrix}
+\]
+        </p>
+        <h3>Part 3. Warping Images and Image Rectification</h3>
+        <p>
+            In this part, I warped the images using the homographies recovered in the previous part. In the correspondences tool,
+            I selected four points that define the corners of the rectification region. Then, I manually defined the rectangular 
+            region where the corners should be warped to. The homography matrix is used to warp the image to the rectangular region.
+            Here are some results:
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/chocolate.jpeg" alt="Chocolate Ad" height="320">
+                    <p class="label">Chocolate Ad</p>
+                </div>
+                <div class="image">
+                    <img src="images/chocolate_rectified.png" alt="Rectified Chocolate Ad" height="320">
+                    <p class="label">Rectified Chocolate Ad</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/tacos.jpeg" alt="Menu" height="320">
+                    <p class="label">Taco Menu</p>
+                </div>
+                <div class="image">
+                    <img src="images/tacos_rectified.png" alt="Rectified Menu" height="320">
+                    <p class="label">Rectified Taco Menu</p>
+                </div>
+            </div>
+        </div>
+        <h3>Part 4. Blend the Images into a Mosaic</h3>
+        <p>
+            For this section I blended the images into a mosaic. I first warped the images to the same coordinate system using
+            the homographies recovered in the previous part. Then, I blended the images using two methods: naive blending and
+            Laplacian blending. Naive blending simply overlays the transformed image on top of reference image. Laplacian blending
+            uses a 2-level Gaussian stack (i.e. high and low frequency components) to blend the two images. For each example, I
+            created a custom mask for Laplacian blending. Here are some results:
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/lec_left.jpeg" alt="Lecture Left" height="220">
+                    <p class="label">Lecture Left</p>
+                </div>
+                <div class="image">
+                    <img src="images/lec_middle.jpeg" alt="Lecture Right" height="220">
+                    <p class="label">Lecture Right</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/lec_naive.png" alt="Naive Blend" height="220">
+                    <p class="label">Lecture Naive Blend</p>
+                </div>
+                <div class="image">
+                    <img src="images/lec_laplacian.png" alt="Laplacian Blend" height="220">
+                    <p class="label">Lecture Laplacian Blend</p>
+                </div>
+            </div>
+            <span class="description">
+                <i>
+                    Notice how Laplacian blend produces a smoother transition between the two images compared to naive blend,
+                    especially in the ceiling area.
+                </i>
+        </div>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/island_left.jpeg" alt="Islands Left" height="220">
+                    <p class="label">Islands Left</p>
+                </div>
+                <div class="image">
+                    <img src="images/island_right.jpeg" alt="Islands Right" height="220">
+                    <p class="label">Islands Right</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/island_naive.png" alt="Islands Naive Blend" height="220">
+                    <p class="label">Islands Naive Blend</p>
+                </div>
+                <div class="image">
+                    <img src="images/island_laplacian.png" alt="Islands Laplacian Blend" height="220">
+                    <p class="label">Islands Laplacian Blend</p>
+                </div>
+            </div>
+            <span class="description">
+                <i>
+                    In this example, the left and right photos have similar exposure, so both naive and Laplacian blending
+                    methods produce similar results.
+                </i>
+            </span>
+        </div>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/sf_left.jpeg" alt="SF Left" height="220">
+                    <p class="label">SF Left</p>
+                </div>
+                <div class="image">
+                    <img src="images/sf_right.jpeg" alt="SF Right" height="220">
+                    <p class="label">SF Right</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/sf_naive.png" alt="SF Naive Blend" height="220">
+                    <p class="label">SF Naive Blend</p>
+                </div>
+                <div class="image">
+                    <img src="images/sf_laplacian.png" alt="SF Laplacian Blend" height="220">
+                    <p class="label">SF Laplacian Blend</p>
+                </div>
+            </div>
+        </div>
+
+        <h2>Project 4B - Feature Matching for Auto Stitching</h2>
+        <h3>Part 1. Detecting Corner Features in an Image</h3>
+        <p>
+            In this part, I use the Harris corner detector to detect corner features in an image. The Harris corner detector
+            works by computing the corner response function at each pixel in the image. The corner response function is defined
+            as the sum of squared differences between the intensities of the image patch around the pixel and the shifted image
+            patch. The Harris corner detector uses the following formula to compute the corner response function:
+
+        </p>
+        <p class="math">\( M = \sum_{(x,y) \in W} \begin{bmatrix} I_x^2 & I_x I_y \\ I_x I_y & I_y^2 \end{bmatrix} \)</p>
+
+        <p>
+            Where \( I_x \) and \( I_y \) are the image gradients in the x and y directions, respectively, and \( W \) is a
+            window around the pixel. The corner response function is then used to compute a corner score for each pixel. The
+            corner score \( R \) is defined as the determinant of the matrix \( M \) over the trace of the matrix \( M \),
+            i.e. \( R = \frac{\text{det}(M)}{\text{trace}(M)} \). Then, I run adaptive non-maximal suppression (ANMS) to
+            select the best corner features that are well distributed across the image, as shown by this formula:
+        </p>
+        <p class="math">
+            \(r_i = \min_j |\mathbf{x}_i - \mathbf{x}_j|, \; \text{s.t.} \; f(\mathbf{x}_i) < c_{\text{robust}} f(\mathbf{x}_j), \; \mathbf{x}_j \in \mathcal{I}\)
+        </p>
+        <p>
+            Where \( r_i \) is the distance to the nearest corner with a higher score, \( f(\mathbf{x}) \) is the corner score
+            at pixel \( \mathbf{x} \), and \( c_{\text{robust}} \) is a threshold that controls the next highest corner score
+            that is considered. Using this method, I select 1000 points for each image.
+        </p>
+
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/lec_left_anms.png" alt="Lecture Left ANMS" height="300">
+                    <p class="label">Lecture Left ANMS</p>
+                </div>
+                <div class="image">
+                    <img src="images/lec_middle_anms.png" alt="Lecture Left ANMS" height="300">
+                    <p class="label">Lecture Right ANMS</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/island_left_anms.png" alt="Island Left ANMS" height="300">
+                    <p class="label">Island Left ANMS</p>
+                </div>
+                <div class="image">
+                    <img src="images/island_right_anms.png" alt="Island Right ANMS" height="300">
+                    <p class="label">Island Right ANMS</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/sf_left_amns.png" alt="SF Left ANMS" height="300">
+                    <p class="label">SF Left ANMS</p>
+                </div>
+                <div class="image">
+                    <img src="images/sf_right_amns.png" alt="SF Right ANMS" height="300">
+                    <p class="label">SF Right ANMS</p>
+                </div>
+            </div>
+        </div>
+
+        <h3>Part 2. Extracting a Feature Descriptor for Each Feature Point</h3>
+        <p>
+            In this part, I extract a feature descriptor for each feature point detected in the previous part. The feature
+            descriptor is a vector that describes the local image patch around the feature point. I used Lowe's method
+            to extract feature descriptors. This algorithm works by sampling the pixels at a lower frequency than the one
+            at which the interest points are located. Given a list of interest points, I sample an
+            \( 8 \times 8 \) patch of pixels around the sub-pixel location of the interest point, using a spacing of \( s = 5 \)
+            pixels between samples. The descriptor vector is normalized to make the features invariant to affine changes in intensity. 
+            Here are some examples of feature descriptors extracted from the images:
+        </p>
+
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/feature1.png" alt="Feature 1" height="250">
+                    <p class="label">Feature 1</p>
+                </div>
+                <div class="image">
+                    <img src="images/feature2.png" alt="Feature 2" height="250">
+                    <p class="label">Feature 2</p>
+                </div>
+                <div class="image">
+                    <img src="images/feature3.png" alt="Feature 3" height="250">
+                    <p class="label">Feature 3</p>
+                </div>
+            </div>
+        </div>
+
+
+        <h3>Part 3. Matching Feature Descriptors Between Two Images</h3>
+        <p>
+            In this part, I match feature descriptors between two images using L2 distance. The L2 distance is computed between
+            each feature descriptor in the first image and each feature descriptor in the second image. The feature descriptors
+            are matched based on the smallest L2 distance. Then, these matches are filtered using the ratio test. The ratio test
+            compares the distance of the best match to the distance of the second-best match. If the ratio of the two distances
+            is less than a threshold, the match is considered good (i.e. the best match is significantly better than the second-best,
+            thus we are more confident in the match). Otherwise, the match is discarded. Here are some results:
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/lec_correspondences.png" alt="Lecture Correspondences" height="300">
+                    <p class="label">Lecture Correspondences (threshold=0.5)</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/lec_correspondences_correct.png" alt="Lecture Correspondences" height="300">
+                    <p class="label">Lecture Correspondences (threshold=0.3)</p>
+                </div>
+            </div>
+            <span class="description"><i>
+                Some of the correspondences detected in the first image are incorrect, which are due to having similar features
+                at different locations.<br>By lowering the threshold, we can filter out these incorrect correspondences.<br>
+                This is later addressed with RANSAC.
+            </i></span>
+            <div class="images">
+                <div class="image">
+                    <img src="images/island_correspondences.png" alt="Island Correspondences" height="300">
+                    <p class="label">Island Correspondences (threshold=0.8)</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/sf_correspondences.png" alt="SF Correspondences" height="300">
+                    <p class="label">SF Correspondences (threshold=0.7)</p>
+                </div>
+            </div>
+        </div>
+        <h3>Part 4. Use RANSAC to Compute Homography</h3>
+        <p>
+            In this part, I use the 4 point RANSAC algorithm to compute the homography between two images. RANSAC is a robust
+            estimation algorithm that can handle a large number of outliers in the data. The algorithm works by randomly
+            selecting 4 point correspondences from the set of matches, computing the homography between the points, and
+            counting the number of inliers (i.e. points that are consistent with the homography). This process is repeated
+            for a fixed number of iterations, and the homography with the most inliers is selected as the best homography.
+            This yields a more accurate homography that is robust to outliers, and it was noticeable in reducing the error
+            in the lecture merge example.
+        </p>
+
+        <h3>Part 5. Auto Stitching Images</h3>
+        <p>
+            In this part, I use the feature matching algorithm to automatically stitch images together. I first detect
+            feature points in the images using the Harris corner detector. Then, I extract feature descriptors for each
+            feature point. I match feature descriptors between the images using the nearest neighbor algorithm. I use
+            RANSAC to compute the homography between the images. Finally, I use the homography to stitch the images together.
+        </p>
+
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/lec_naive.png" alt="SF Naive Blend" height="220">
+                    <p class="label">Lecture Naive Blend</p>
+                </div>
+                <div class="image">
+                    <img src="images/lec_auto.png" alt="SF Auto Blend" height="220">
+                    <p class="label">Lecture Auto Blend</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/island_naive.png" alt="Island Naive Blend" height="220">
+                    <p class="label">Island Naive Blend</p>
+                </div>
+                <div class="image">
+                    <img src="images/island_auto.png" alt="Island Auto Blend" height="220">
+                    <p class="label">Island Auto Blend</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/sf_naive.png" alt="SF Naive Blend" height="220">
+                    <p class="label">SF Naive Blend</p>
+                </div>
+                <div class="image">
+                    <img src="images/sf_auto.png" alt="SF Auto Blend" height="220">
+                    <p class="label">SF Auto Blend</p>
+                </div>
+            </div>
+        </div>
+
+        <h3>What have I learned?</h3>
+        <p>
+            The most interesting thing I learned from this project was how homography matrices can be computed using
+            point correspondences between images. Having gone through different ways of fining these correspondences,
+            I noticed how a number of different algorithms were developed to solve this problem. I learned that RANSAC
+            is a powerful algorithm for finding a good homography even with outliers present, as seen by the lecture
+            blend example from this project. I also enjoyed the image rectification part, where I was able to warp images
+            to a common coordinate system. Overall I learned a lot about image morphing and blending, and how these techniques
+            can be used to create seamless photo mosaics.
+        </p>
+    </body>
+</html>
