@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>CS 184 Homework 1 Write-Up</title>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+      // The image selector functions are included in case you wish to add interactive screenshots.
+      class Image {
+        constructor(src, height, dropdown_label, label) {
+          this.src = src;
+          this.height = height;
+          this.dropdown_label = dropdown_label;
+          this.label = label;
+        }
+      }
+  
+      function register_image_selector(image_selector_root, images) {
+        const image_selector = document.getElementById(image_selector_root);
+        if (!image_selector) {
+          alert(`Could not find image selector with id ${image_selector_root}`);
+          return;
+        }
+        const image_selector_image = image_selector.querySelector('.image-selector-image');
+        if (!image_selector_image) {
+          alert(`Could not find image selector image with class ${image_selector_root}`);
+          return;
+        }
+        const image_selector_select = image_selector.querySelector('.image-selector-select');
+        if (!image_selector_select) {
+          alert(`Could not find image selector select with class ${image_selector_root}`);
+          return;
+        }
+        const image_selector_label = image_selector.querySelector('.image-selector-label');
+        if (!image_selector_label) {
+          alert(`Could not find image selector label with class ${image_selector_root}`);
+          return;
+        }
+  
+        images.forEach((image, index) => {
+          const option = document.createElement('option');
+          option.value = index;
+          option.text = image.dropdown_label;
+          image_selector_select.appendChild(option);
+        });
+  
+        function onchange() {
+          const selected_image = images[image_selector_select.value];
+          image_selector_image.src = selected_image.src;
+          image_selector_image.alt = selected_image.label;
+          image_selector_image.height = selected_image.height;
+  
+          image_selector_label.innerHTML = selected_image.label;
+        };
+  
+        image_selector_select.addEventListener('change', onchange);
+        onchange();
+      }
+  
+      function onload() {
+        // Example: add image selectors if you have interactive screenshots.
+        // (Update paths and labels as needed.)
+        const task1_images = [
+          new Image('images/test4_default.png', 300, 'Test4 Default', 'Test4 Screenshot (Default Viewing)'),
+          new Image('images/test4_zoomed.png', 300, 'Test4 Zoomed', 'Test4 Screenshot (Pixel Inspector Centered)')
+        ];
+  
+        // register_image_selector('image-selector-task1', task1_images);
+      }
+    </script>
+    <style>
+            
+
+      body {
+          padding: 20px;
+      }
+
+      .image-container, .image-selector {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-around;
+      }
+
+      .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
+          text-align: center;
+      }
+
+      .image-container .description, .image-selector .description {
+          margin-bottom: 25px;
+      }
+
+      .math {
+          display: block;
+          width: 100%;
+          text-align: center;
+      }
+
+      .images {
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+      }
+
+      select {
+          width: fit-content;
+          margin: 0 auto;
+          padding: 16px 26px;
+          font-size: 16pt;
+          margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body onload="onload();">
+    <h1>CS 184 Homework 1 Write-Up</h1>
+    
+    <div class="section" id="task1">
+      <h2>Task 1. Drawing Single-Color Triangles</h2>
+      <p>
+        First, we check that all the triangles' vertices are ordered in the counterclockwise direction by computing
+        if <span>\(k=(x_1-x_0) * (y_2-y_1) - (y_1-y_0) * (x_2-x_1)\)</span>. If \(k < 0\), we swap \(x_1\) and \(x_2\),
+        and \(y_1\) and \(y2\) to ensure that the vertices are ordered correctly. This will ensure that when we take the
+        dot product to determine if a pixel is inside the triangle, the sign of the result will be consistent
+        with the winding order. Next, we compute the bounding box for the triangle by taking the minimum and maximum values
+        of the \(x\) and \(y\) vertices, and iterate over each pixel in the bounding box.
+      </p>
+      <p>
+        For each pixel in the bounding box, a sample point is taken at its center, at coordinates \((x + 0.5, y + 0.5)\).
+        At this point, an inside-triangle test is performed for every sample. If the sample lies within the triangle, the
+        color that was passed onto the rasterizer is written to the sample buffer at the sample point.
+      </p>
+      <p>
+        Our algorithm is no worse than the brute-force method of checking every sample in the bounding box, as it inherently
+        tests only the pixels where the triangle can possibly appear.
+      </p>
+      <p>
+        A screenshot of our rendered triangle is shown below:
+      </p>
+      <div class="image-container">
+        <div class="images">
+          <div class="image">
+            <img src="images/my_robot.png" alt="Animated Cubeman" height="300">
+            <p class="label">Animated Cubeman (my_robot.svg)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section" id="task2">
+      <h2>Task 2. Antialiasing by Supersampling</h2>
+      <p>
+        Supersampling helps reduce aliasing by capturing partial coverage at triangle edges. We maintain a high-resolution
+        sample buffer <code>RasterizerImp::sample_buffer</code> that holds floating point color values for each subpixel.
+        For a framebuffer of dimensions <em>width</em> × <em>height</em> and a sample rate \(s\) (a perfect square), 
+        the buffer stores <em>width</em> × <em>height</em> × \(s\). As the user changes the sample rate, the buffer
+        is resized accordingly.
+      </p>
+      <p>
+        In our <code>rasterize_triangle</code> function, we compute the bounding box of the triangle and iterate over each pixel.
+        Within each pixel, we subdivide into a \(\sqrt{s} \times \sqrt{s}\) grid. The position of each subpixel is calculated as:
+      </p>
+      <p class="math">
+        <em>sample_pos</em> \(=\) <em>pixel coordinate</em> × \(\frac{2i + 1}{2\sqrt{s}}\)
+      </p>
+      <p>
+        Each subpixel that passes the inside-triangle test is colored, and during the resolve phase, all subpixel colors are
+        averaged to produce a smooth, antialiased pixel color.
+      </p>
+      <p>
+        Comparisons of sample rates 1, 4, and 16 illustrate how supersampling smooths out edges.
+      </p>
+
+      <div class="image-container">
+        <div class="images">
+          <div class="image">
+            <img src="images/supersampling_1x.png" alt="Supersampling 1x" height="420">
+            <p class="label">Supersampling, 1 Sample/Pixel</p>
+          </div>
+        </div>
+        <div class="images">
+          <div class="image">
+            <img src="images/supersampling_4x.png" alt="Supersampling 4x" height="420">
+            <p class="label">Supersampling, 4 Samples/Pixel</p>
+          </div>
+        </div>
+        <div class=""images">
+          <div class="image">
+            <img src="images/supersampling_16x.png" alt="Supersampling 16x" height="420">
+            <p class="label">Supersampling, 16 Samples/Pixel</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section" id="task3">
+      <h2>Task 3. Transforms</h2>
+      <p>
+        For this task, the robot SVG file is updated to the cubeman the cubeman flexes with both arms raised.
+      </p>
+      <div class="image-container">
+        <div class="images">
+          <div class="image">
+            <img src="images/my_robot.png" alt="My Robot" height="420">
+            <p class="label">My Robot</p>
+          </div>
+        </div>
+      </div>
+      <p>
+        <strong>Extra Credit:</strong> We enabled viewport rotation via key bindings. Each rotation rotates the viewport
+        by \(\frac{\pi}{6}\) radians. Pressing the [R] key rotates it to the right, and [E] key rotates it to the left.
+      </p>
+      <p>
+        Given rotation degree \(d\) in radians, the rotation is applied with the transformation matrix:
+      </p>
+      <h4 class="math">
+        $$
+        \begin{pmatrix}
+        \cos(d) & -\sin(d) & 0 \\
+        \sin(d) & \cos(d) & 0 \\
+        0 & 0 & 1
+        \end{pmatrix}
+        $$
+      </h4>
+      <p>
+        This matrix is incorporated into the transformation pipeline to rotate the SVG about its center. Specifically,
+        I created a translation matrix that moves the SVG to the origin, a rotation matrix that rotates the SVG, and a
+        translation matrix that moves the SVG back to its original position. These matrices are multiplied together and
+        applied before the <code>ndc_to_screen</code> and <code>svg_to_ndc</code> matrices in <code>DrawRend::redraw</code> function.
+      </p>
+      <!-- Extra Credit -->
+      <div class="image-container">
+        <div class="images">
+          <div class="image">
+            <img src="images/my_robot_left.png" alt="My Robot Left" height="300">
+            <p class="label">My Robot (Rotated left by 30˚)</p>
+          </div>
+          <div class="image">
+            <img src="images/my_robot_right.png" alt="My Robot Right" height="300">
+            <p class="label">My Robot (Rotated right by 30˚)</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section" id="task4">
+      <h2>Task 4. Barycentric coordinates</h2>
+      <p>
+        Barycentric coordinates allow us to express any point \(P\) within a triangle as a weighted sum of its vertices \(A\), \(B\), and \(C\).
+        Then, any point \(P\) can be expressed as:
+      </p>
+      <h4 class="math">
+        $$ P = \alpha A + \beta B + \gamma C $$
+      </h4>
+      <p>
+        With the constraint \( \alpha + \beta + \gamma = 1 \) and \( \alpha, \beta, \gamma \geq 0 \).
+      </p>
+      <p>
+        Here, the weights \(\alpha\), \(\beta\), and \(\gamma\) are the barycentric coordinates of \(P\). In computer graphics, this system is
+        incredibly useful because these weights can be directly used to interpolate vertex attributes, such as colors, texture coordinates,
+        and normals, across the triangle. In our rasterizer, we compute these coordinates by inverting a \(3 \times 3\) matrix built from the
+        vertex positions. Multiplying the sample points by the inverse matrix yields the barycentric coordinates for that sample point. This
+        matrix is computed as follows:
+
+        
+      </p>
+      <p>
+        The following diagrams illustrates this concept. 
+      </p>
+      <div class="image-container">
+        <div class="images">
+          <div class="image">
+            <img src="images/barycentric_circle.png" alt="Barycentric Circle" height="250">
+            <p class="label">Barycentric Circle</p>
+          </div>
+          <div class="image">
+            <img src="images/barycentric_triangle.png" alt="Barycentric Triangle" height="250">
+            <p class="label">Barycentric Triangle</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="section" id="task5">
+      <h2>Task 5: "Pixel Sampling" for Texture Mapping</h2>
+      <p>
+        In texture mapping, pixel sampling is the process of determining the final color of a pixel by "sampling" the texture image at the
+        corresponding texture coordinates. When we map a 2D texture onto a triangle, each pixel inside the triangle gets a texture coordinate 
+        \((u,v)\) by interpolating the per-vertex texture coordinates. The texture color is then determined by sampling the texture image at
+        these coordinates. 
+      </p>
+      <p>
+        In nearest neighbor sampling, we simply convert the continuous texture coordinate into a discrete texel coordinate by rounding. 
+        For example, given a texture coordinate \((u, v)\), we multiply by the texture's width and height respectively, then round to the nearest integer.
+        This method is very fast and easy to implement (as shown in our <code>Texture::sample_nearest</code> function), but it can produce a "blocky" or
+        pixelated appearance. This is especially noticeable when the texture is magnified or when there are abrupt changes in the texture's content.
+      </p>
+      <p>
+        Bilinear sampling improves upon nearest neighbor by taking into account the four texels that surround the given texture coordinate.
+        After computing the integer part (using floor) and the fractional part of the coordinate, we perform a weighted average of the
+        four neighboring texels. In our <code>Texture::sample_bilinear</code> function, we:
+        <ol>
+          <li>Compute the integer texel coordinates \((x, y)\) from the texture coordinate \((u, v)\).</li>
+          <li>Compute the fractional part of the texture coordinate \((u_{ratio}, v_{ratio})\).</li>
+          <li>Compute the bilinear interpolation of the four neighboring texels using the ratio computed above.</li>
+        </ol>
+        The result is a smooth blend that avoids the sharp transitions seen with nearest neighbor sampling.
+      </p>
+      <p>
+        In our rasterizer, barycentric coordinates are used to interpolate the \((u,v)\) coordinates. Then, based on the selected sampling method, either <code>sample_nearest</code> or <code>sample_bilinear</code> is called to fetch the texture color.
+      </p>
+      <div class="image-container">
+        <div class="images">
+          <div class="image">
+            <img src="images/texmap_nearest_1x.png" alt="Nearest 1x" height="220">
+            <p class="label">Nearest Sampling, 1 Sample/Pixel</p>
+          </div>
+          <div class="image">
+            <img src="images/texmap_nearest_16x.png" alt="Nearest 16x" height="220">
+            <p class="label">Nearest Sampling, 16 Samples/Pixel</p>
+          </div>
+        </div>
+        <div class="images">
+          <div class="image">
+            <img src="images/texmap_bilinear_1x.png" alt="Bilinear 1x" height="220">
+            <p class="label">Bilinear Sampling, 1 Sample/Pixel</p>
+          </div>
+          <div class="image">
+            <img src="images/texmap_bilinear_16x.png" alt="Bilinear 16x" height="220">
+            <p class="label">Bilinear Sampling, 16 Samples/Pixel</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+
+    
+    <!-- Task 6: Level Sampling and Mipmapping -->
+    <div class="section" id="task6">
+      <h2>Task 6. "Level Sampling" with Mipmaps for Texture Mapping</h2>
+      <p>
+        To reduce aliasing in texture mapping, we use mipmaps—precomputed, downscaled versions of the full-resolution texture.
+        The idea is to select (or blend between) mip levels based on how rapidly the texture coordinates change across the screen.
+      </p>
+      <p>
+        To implement this, we need the partial derivatives of the texture coordinates with respect to screen-space \(x\) and \(y\).
+        We calculate these derivatives in <code>RasterizerImp::rasterize_textured_triangle</code> and pass them to <code>Texture::get_level</code>.
+        This function computes the mipmap level based on the derivatives and the selected level sampling mode. This partial derivative is
+        calculated by first computing the barycentric coordinates of the texture coordinates at \((x, y)\), \((x+1, y)\), and \((x, y+1)\).
+        The difference vectors are then scaled by the texture's width and height to get the partial derivatives. Then, the mipmap level
+        is calculated using the formula:
+      </p>
+      <p class="math">
+        $$
+        L = \log_2 \Bigl(
+          \max\Bigl(
+            \sqrt{\Bigl(\frac{\partial u}{\partial x}\Bigr)^2 
+                  + \Bigl(\frac{\partial v}{\partial x}\Bigr)^2},
+            \sqrt{\Bigl(\frac{\partial u}{\partial y}\Bigr)^2 
+                  + \Bigl(\frac{\partial v}{\partial y}\Bigr)^2}
+          \Bigr)
+        \Bigr).
+        $$
+      </p>
+      <p>
+        Here, we take the norm of the two vectors and choose the larger of the two. The norm measures how quickly the texture coordinates
+        change across the screen. The logarithm of this value gives us the mipmap level to sample from. We then use this level to fetch
+        the texture color using the selected level sampling method. There are three level sampling methods:
+        <ul>
+          <li>
+            <strong>L_ZERO:</strong> Always use mip level 0 (full resolution). This is fast but can produce aliasing artifacts when the texture
+            is minimized.
+          </li>
+          <li>
+            <strong>L_NEAREST:</strong> Round \(L\) to the nearest integer and sample from that mip level. This reduces aliasing artifacts,
+            though the transition between levels can be abrupt. This method is faster than linear sampling.
+          </li>
+          <li>
+            <strong>L_LINEAR:</strong> Blend between the two integer mip levels around \(L\) using a weighted sum. This method produces the
+            smoothest results but is the slowest. When combined with bilinear pixel sampling, this is known as trilinear filtering.
+          </li>
+        </ul>
+        To integrate level sampling into the rasterizer, we updated the <code>Texture::sample</code> function to support the three level sampling methods.
+        Then in <code>RasterizerImp::rasterize_textured_triangle</code>, we calculate the partial derivatives and pass them to <code>Texture::sample</code>,
+        which uses <code>Texture::get_level</code> to determine the mip level to sample from. Then, the texture color is fetched using the selected
+        level sampling method.
+      </p>
+      <p>
+        Overall, L_ZERO is the fastest and uses minimal extra memory, but can exhibit significant aliasing in minified areas.
+        L_NEAREST offers improved quality by choosing an appropriate mip level, though level transitions may be noticeable.
+        L_LINEAR provides the smoothest appearance at the cost of extra texture lookups and blending operations.
+      </p>        
+      <p>
+        The following images show the same texture mapped onto a triangle using different level sampling methods and pixel sampling methods.
+      </p>
+      <div class="image-container">
+        <div class="images">
+          <div class="image">
+            <img src="images/texmap_L0_PNearest.png" alt="L_ZERO & P_NEAREST" height="220">
+            <p class="label">L_ZERO &amp; P_NEAREST</p>
+          </div>
+          <div class="image">
+            <img src="images/texmap_L0_PLinear.png" alt="L_ZERO & P_LINEAR" height="220">
+            <p class="label">L_ZERO &amp; P_LINEAR</p>
+          </div>
+        </div>
+        <div class="images">
+          <div class="image">
+            <img src="images/texmap_LNearest_PNearest.png" alt="L_NEAREST & P_NEAREST" height="220">
+            <p class="label">L_NEAREST &amp; P_NEAREST</p>
+          </div>
+          <div class="image">
+            <img src="images/texmap_LNearest_PLinear.png" alt="L_NEAREST & P_LINEAR" height="220">
+            <p class="label">L_NEAREST &amp; P_LINEAR</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
