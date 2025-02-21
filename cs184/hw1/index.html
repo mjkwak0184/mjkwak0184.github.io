@@ -159,7 +159,7 @@
         Within each pixel, we subdivide into a \(\sqrt{s} \times \sqrt{s}\) grid. The position of each subpixel is calculated as:
       </p>
       <p class="math">
-        <em>sample_pos</em> \(=\) <em>pixel coordinate</em> × \(\frac{2i + 1}{2\sqrt{s}}\)
+        <em>sample_pos</em> \(=\) <em>pixel coordinate</em> × \(\frac{2i + 1}{2\sqrt{s}}\) where i is the subpixel index.
       </p>
       <p>
         Each subpixel that passes the inside-triangle test is colored, and during the resolve phase, all subpixel colors are
@@ -259,11 +259,23 @@
         and normals, across the triangle. In our rasterizer, we compute these coordinates by inverting a \(3 \times 3\) matrix built from the
         vertex positions. Multiplying the sample points by the inverse matrix yields the barycentric coordinates for that sample point. This
         matrix is computed as follows:
-
-        
+      </p>
+      <p class="math">
+        $$
+        M=\begin{pmatrix}
+        x_0 & x_1 & x_2 \\
+        y_0 & y_1 & y_2 \\
+        1 & 1 & 1
+        \end{pmatrix}^{-1}
+        $$
       </p>
       <p>
-        The following diagrams illustrates this concept. 
+        This matrix is used to compute the barycentric coordinates for each sample point in the triangle. The barycentric coordinates for
+        a given coordinate \((x, y)\) are then computed by multiplying the sample point by the inverse matrix. The resulting coordinates
+        are then used to interpolate the vertex attributes across the triangle.
+      </p>
+      <p>
+        The following diagrams demonstrates this implementation.
       </p>
       <div class="image-container">
         <div class="images">
