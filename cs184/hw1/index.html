@@ -81,6 +81,10 @@
           justify-content: space-around;
       }
 
+      .description {
+        font-style: italic;
+      }
+
       .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
           text-align: center;
       }
@@ -138,8 +142,8 @@
       <div class="image-container">
         <div class="images">
           <div class="image">
-            <img src="images/my_robot.png" alt="Animated Cubeman" height="300">
-            <p class="label">Animated Cubeman (my_robot.svg)</p>
+            <img src="images/supersampling_1x.png" alt="Rendered Triangle" height="300">
+            <p class="label">Rendered Triangle</p>
           </div>
         </div>
       </div>
@@ -159,7 +163,7 @@
         Within each pixel, we subdivide into a \(\sqrt{s} \times \sqrt{s}\) grid. The position of each subpixel is calculated as:
       </p>
       <p class="math">
-        <em>sample_pos</em> \(=\) <em>pixel coordinate</em> × \(\frac{2i + 1}{2\sqrt{s}}\) where i is the subpixel index.
+        <em>sample_pos</em> \(=\) <em>pixel coordinate</em> × \(\frac{2i + 1}{2\sqrt{s}}\) where \(i\) is the subpixel index.
       </p>
       <p>
         Each subpixel that passes the inside-triangle test is colored, and during the resolve phase, all subpixel colors are
@@ -176,18 +180,30 @@
             <p class="label">Supersampling, 1 Sample/Pixel</p>
           </div>
         </div>
+        <span class="description">
+          With only one sample per pixel, aliasing is prominent.<br>
+          Edges appear jagged, and fine details along the triangle boundaries are lost.
+        </span>
         <div class="images">
           <div class="image">
             <img src="images/supersampling_4x.png" alt="Supersampling 4x" height="420">
             <p class="label">Supersampling, 4 Samples/Pixel</p>
           </div>
         </div>
-        <div class=""images">
+        <span class="description">
+          Using a 2 by 2 grid improves the edge quality noticeably.<br>
+          The transition along triangle boundaries is smoother, reducing the appearance of jagged edges.
+        </span>
+        <div class="images">
           <div class="image">
             <img src="images/supersampling_16x.png" alt="Supersampling 16x" height="420">
             <p class="label">Supersampling, 16 Samples/Pixel</p>
           </div>
         </div>
+        <span class="description">
+          A 4 by 4 grid produces even smoother edges. The subtle variations near the edges are captured much better,<br>
+          resulting in a near-continuous transition in color along the triangle boundaries.
+        </span>
       </div>
     </div>
     
@@ -317,29 +333,50 @@
         The result is a smooth blend that avoids the sharp transitions seen with nearest neighbor sampling.
       </p>
       <p>
-        In our rasterizer, barycentric coordinates are used to interpolate the \((u,v)\) coordinates. Then, based on the selected sampling method, either <code>sample_nearest</code> or <code>sample_bilinear</code> is called to fetch the texture color.
+        In our rasterizer, barycentric coordinates are used to interpolate the \((u,v)\) coordinates. Then, based on the selected sampling method,
+        either <code>sample_nearest</code> or <code>sample_bilinear</code> is called to fetch the texture color.
       </p>
       <div class="image-container">
-        <div class="images">
+        <div class="images" style="text-align: center;">
           <div class="image">
             <img src="images/texmap_nearest_1x.png" alt="Nearest 1x" height="220">
             <p class="label">Nearest Sampling, 1 Sample/Pixel</p>
           </div>
+        </div>
+        <span class="description">
+          The texture appears blocky with noticeable pixelation, especially near the edge of high contrast areas.<br>
+          Sharp edges in the texture are preserved, but aliasing artifacts are evident.
+        </span>
+        <div class="images">
           <div class="image">
             <img src="images/texmap_nearest_16x.png" alt="Nearest 16x" height="220">
             <p class="label">Nearest Sampling, 16 Samples/Pixel</p>
           </div>
         </div>
+        <span class="description">
+          Supersampling softens the blockiness somewhat by averaging multiple nearest samples, yet the underlying pixelated look remains.
+        </span>
         <div class="images">
           <div class="image">
             <img src="images/texmap_bilinear_1x.png" alt="Bilinear 1x" height="220">
             <p class="label">Bilinear Sampling, 1 Sample/Pixel</p>
           </div>
+        </div>
+        <span class="description">
+          Even without supersampling, bilinear interpolation produces a smooth gradient between texels. <br>
+          Artifacts are greatly reduced compared to the nearest method.<br>
+          The result is similar to applying nearest sampling at 16 samples per pixel
+        </span>
+        <div class="images">
           <div class="image">
             <img src="images/texmap_bilinear_16x.png" alt="Bilinear 16x" height="220">
             <p class="label">Bilinear Sampling, 16 Samples/Pixel</p>
           </div>
         </div>
+        <span class="description">
+          The combination of bilinear interpolation and supersampling results in an exceptionally smooth texture appearance with minimal aliasing.<br>
+          Fine details blend naturally, even at high contrast regions.
+        </span>
       </div>
     </div>
     
