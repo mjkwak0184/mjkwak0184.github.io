@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>CS 184 Homework 2 Write-Up</title>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+      class Image {
+          constructor(src, height, dropdown_label, label) {
+              this.src = src;
+              this.height = height;
+              this.dropdown_label = dropdown_label;
+              this.label = label;
+          }
+      }
+
+      function register_image_selector(image_selector_root, images) {
+          const image_selector = document.getElementById(image_selector_root);
+          if (!image_selector) {
+              alert(`Could not find image selector with id ${image_selector_root}`);
+              return;
+          }
+          const image_selector_image = image_selector.querySelector('.image-selector-image');
+          if (!image_selector_image) {
+              alert(`Could not find image selector image with class ${image_selector_root}`);
+              return;
+          }
+          const image_selector_select = image_selector.querySelector('.image-selector-select');
+          if (!image_selector_select) {
+              alert(`Could not find image selector select with class ${image_selector_root}`);
+              return;
+          }
+          const image_selector_label = image_selector.querySelector('.image-selector-label');
+          if (!image_selector_label) {
+              alert(`Could not find image selector label with class ${image_selector_root}`);
+              return;
+          }
+
+          images.forEach((image, index) => {
+              const option = document.createElement('option');
+              option.value = index;
+              option.text = image.dropdown_label;
+              image_selector_select.appendChild(option);
+          });
+
+          function onchange() {
+              const selected_image = images[image_selector_select.value];
+              image_selector_image.src = selected_image.src;
+              image_selector_image.alt = selected_image.label;
+              image_selector_image.height = selected_image.height;
+
+              image_selector_label.innerHTML = selected_image.label;
+          };
+
+          image_selector_select.addEventListener('change', onchange);
+          onchange();
+      }
+
+      function onload() {
+          const sad_images = [
+              new Image('images/sad.jpeg', 440, 'Sad Image (Original)', 'Sad Image (Original)'),
+              new Image('images/sad_1.jpeg', 440, 'Sad Image (alpha=1)', 'Sad Image (alpha=1)'),
+              new Image('images/sad_4.jpeg', 440, 'Sad Image (alpha=4)', 'Sad Image (alpha=4)'),
+              new Image('images/sad_20.jpeg', 440, 'Sad Image (alpha=20)', 'Sad Image (alpha=20)'),
+          ];
+
+          const classroom_images = [
+              new Image('images/classroom.jpeg', 400, 'Classroom Image (Original)', 'Classroom Image (Original)'),
+              new Image('images/classroom_1.jpeg', 400, 'Classroom Image (alpha=1)', 'Classroom Image (alpha=1)'),
+              new Image('images/classroom_4.jpeg', 400, 'Classroom Image (alpha=4)', 'Classroom Image (alpha=4)'),
+              new Image('images/classroom_20.jpeg', 400, 'Classroom Image (alpha=20)', 'Classroom Image (alpha=20)'),
+          ]
+
+          // register_image_selector('image-selector-sad', sad_images);
+          // register_image_selector('image-selector-classroom', classroom_images);
+      }
+
+      
+  </script>
+    <style>
+            
+
+      body {
+          padding: 20px;
+      }
+
+      .image-container, .image-selector {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-around;
+      }
+
+      .description {
+        font-style: italic;
+      }
+
+      .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
+          text-align: center;
+      }
+
+      .image-container .description, .image-selector .description {
+          margin-bottom: 25px;
+      }
+
+      .math {
+          display: block;
+          width: 100%;
+          text-align: center;
+      }
+
+      .images {
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+      }
+
+      select {
+          width: fit-content;
+          margin: 0 auto;
+          padding: 16px 26px;
+          font-size: 16pt;
+          margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body onload="onload();">
+    <h1>CS 184 Homework 2 Write-Up</h1>
+    <h2>Section 1. Bezier Curves and Surfaces</h2>
+    <h3>Part 1. Bezier Curves with 1D de Casteljau Subdivision</h3>
+    <p>
+      In this part, we implemented de Casteljau's algorithm to evaluate Bezier curves. This algorithm recursively
+      subdivides the control points of a Bezier curve to find the final evaluated point. Given a set of control
+      points, the algorithm computes the intermediate points at each level of subdivision until the final point
+      is reached. This is done by linearly interpolating between each pair of points at each level, as detailed by
+      the formula below.
+    </p>
+    <p class="math">
+      $$
+      b^{n+1}_i = (1 - t) \cdot b^n_i + t \cdot b^n_{i+1}
+      $$
+    </p>
+    <p>
+      Here, \(b^n_i\) represents the \(i\)-th control point at level \(n\), and \(t\) is the parameter that determines
+      the position of the evaluated point along the curve. By recursively applying this formula, we can evaluate the
+      Bezier curve at any point \(t\). The set of all the evaluated points from \(t = 0\) to \(t = 1\) forms the Bezier
+      curve.
+    </p>
+    <p>
+      To demonstrate the implementation of de Casteljau's algorithm, we created a Bezier curve with 6 control points
+      of our choosing. The screenshots below show the evaluation of the curve at different levels of subdivision.
+    </p>
+
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p1-l0.png" alt="Level 0" height="260">
+          <p class="label">Level 0 (Points)</p>
+        </div>
+        <div class="image">
+          <img src="images/p1-l1.png" alt="Level 1" height="260">
+          <p class="label">Level 1</p>
+        </div>
+        <div class="image">
+          <img src="images/p1-l2.png" alt="Level 2" height="260">
+          <p class="label">Level 2</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p1-l3.png" alt="Level 3" height="260">
+          <p class="label">Level 3</p>
+        </div>
+        <div class="image">
+          <img src="images/p1-l4.png" alt="Level 4" height="260">
+          <p class="label">Level 4</p>
+        </div>
+        <div class="image">
+          <img src="images/p1-l5.png" alt="Level 5" height="260">
+          <p class="label">Level 5</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p1-modified.png" alt="Modified Bezier" height="440">
+          <p class="label">Modified curve with different \(t\) shown</p>
+        </div>
+      </div>
+    </div>
+    <h3>Part 2. Bezier Surfaces with Separable 1D de Casteljau</h3>
+    <p>
+      The de Casteljau algorithm can be extended to evaluate Bezier surfaces by considering the control points as a
+      two-dimensional grid. To that end, we modified the functions we implemented for Bezier curves to work with
+      Bezier surfaces. The algorithm evaluates the surface at a given pair of parameters \(u\) and \(v\) by first
+      evaluating the Bezier curves along the rows and columns of the control points grid, respectively. This is done
+      by recursively subdividing the control points and interpolating between them to find the final point on the
+      curve.
+    </p>
+    <p>Evaluate Along \(u\) (Rows)</p>
+
+    <p>The function evaluate1D takes a set of 3D control points and recursively reduces them using evaluateStep until only one point remains. 
+      This function is first applied to each row of control points to interpolate along \(u\), yielding a new set of intermediate control points.</p>
+    
+    <p>Evaluate Along \(v\) (Columns)</p>
+    
+    <p>The intermediate points obtained from the first step are then treated as a new Bézier curve. Applying evaluate1D again, 
+      this time along \(v\), computes the final interpolated point on the Bézier surface.</p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p2-teapot.png" alt="Teapot" height="440">
+          <p class="label">Teapot</p>
+        </div>
+      </div>
+    </div>
+    <h2>Section 2. Triangle Meshes and Half-Edge Data Structure</h2>
+    <h3>Part 3. Area-Weighted Vertex Normals</h3>
+    <p>
+      We implemented the function <code>Vertex::normal()</code> computes the area-weighted normal for a vertex by averaging the normals of adjacent faces. 
+      It initializes a vector accumulator and iterates over all neighboring faces using the half-edge structure. For each face, it checks if it's a boundary, 
+      then computes its normal using the cross product of two edge vectors. This normal, proportional to the face's area, is then being added to the accumulator. 
+      The process repeats until all faces are considered, and the final summed normal is normalized before being returned.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p3-teapot-unsmooth.png" alt="Teapot" height="330">
+          <p class="label">Teapot shading without vertex normals</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p3-teapot-smooth.png" alt="Teapot" height="330">
+          <p class="label">Teapot shading with vertex normals</p>
+        </div>
+      </div>
+    </div>
+    <h3>Part 4. Edge Flip</h3>
+    <p>
+      The <code>flipEdge</code> function in <code>HalfedgeMesh</code> flips a non-boundary edge by updating its connectivity while preserving mesh topology. 
+      The function first checks if the given edge is a boundary, returning immediately if true. 
+      It then retrieves the associated halfedges, faces, and vertices, and storing them in temporary values, ensuring that the new configuration maintains valid references. 
+      The vertex pointers are updated to reflect the new edge endpoints, while edges and faces are reassigned their correct halfedges. 
+      The halfedge pointers are then restructured to reflect the flipped configuration with all components, maintaining proper adjacency and preserving mesh integrity. 
+    </p>
+    <p>
+      We attempted debugging with trying out on the teapot mesh with GUI to see if there were holes formed, using check_for() to make sure that pointer reassignments were done correctly.
+      We initially attempted to not use set_neighbours, but that resulted in a lot of holes in the mesh.
+    </p>
+    <p>
+      The images below are before and after the edge flip.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p4-teapot-unflipped.png" alt="Teapot" height="300">
+          <p class="label">Teapot before edge flip</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p4-teapot-flipped.png" alt="Teapot" height="300">
+          <p class="label">Teapot with one edge flipped</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p4-teapot-multiple_flipped.png" alt="Teapot" height="300">
+          <p class="label">Teapot with multiple edges flipped</p>
+        </div>
+      </div>
+    </div>
+    <h3>Part 5. Edge Split</h3>
+    <p>
+      For the <code>splitEdge</code> function, We implemented an edge split operation that adds a new vertex at the midpoint of a given edge. 
+      If the edge is on the boundary, we first determined which halfedge was part of the interior face and used that as the reference for splitting. 
+      The split created a new vertex <code>m</code> at the midpoint of the edge and introduced two new halfedges (<code>h3</code> and <code>h4</code>) to maintain proper connectivity. 
+      We also created a new face (<code>f1</code>) and two new edges (<code>e3</code> and <code>e4</code>), ensuring all pointers were properly reassigned. 
+      
+      For non-boundary edges, We followed a similar approach but created additional halfedges (<code>h5, h5t, h6, h6t, h7, h7t</code>), two new faces (<code>f2</code> and <code>f3</code>), and three new edges (<code>e5, e6, e7</code>) to maintain a consistent mesh structure. 
+      The most challenging part was ensuring all halfedge relationships, particularly twin assignments, remained correct to prevent mesh inconsistencies.
+      We used the <code>check_for(...)</code> function to debug pointer assignments, especially for the twin and next halfedge relationships. 
+      
+      Additionally, we flagged the new edges and vertex as <code>isNew</code> to track changes, ensuring that the remeshing process remained consistent with future operations. 
+      Below are images showing the mesh before and after splitting edges, a combination of edge splits and flips, as well as splits on boundaries.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p5-beetle-unsplit.png" alt="Teapot" height="300">
+          <p class="label">Beetle before edge splits</p>
+        </div>
+        <div class="image">
+          <img src="images/p5-beetle-split.png" alt="Teapot" height="300">
+          <p class="label">Beetle after edge splits</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p5-beetle-split_and_flip.png" alt="Teapot" height="300">
+          <p class="label">Beetle after edge splits and flips</p>
+        </div>
+        <div class="image">
+          <img src="images/p5-beetle-boundary.png" alt="Teapot" height="300">
+          <p class="label">Beetle after boundary edge splits</p>
+        </div>
+      </div>
+    </div>
+    <h3>Part 6. Loop Subdivision for Mesh Upsampling</h3>
+    <p>
+      In this part, we implemented the loop subdivision algorithm to upsample a mesh. Upsampling is useful for converting
+      a coarse polygon mesh into a higher-resolution one for better display, more accurate simulation, and other purposes.
+      One of the algorithm that achieves this is loop subdivision, which subdivides each triangle in the mesh into four
+      smaller triangles and updates the vertex positions based on a weighting scheme. The algorithm consists of two main
+      steps: subdividing each triangle and updating the vertex positions. To implmenet loop subdivision, we first computed
+      the new positions of the vertices in the original mesh. These positions are applied after the mesh is subdivided via
+      edge splits and flips. The new positions are calculated based on the original vertex positions and the neighboring
+      vertex positions, using the weights described below.
+    </p>
+    <p>
+      The new position of a vertex splitting the shared edge \((A, B)\) between a pair of triangles \((A, C, B)\) and
+      \((A, B, D)\) is given by:
+    </p>
+    <p class="math">
+      $$
+      3/8 \cdot (A + B) + 1/8 \cdot (C + D)
+      $$
+    </p>
+    <p>
+      This gives the vertices closest to the edge, i.e. A and B, more weight in the new position calculation. For existing
+      vertices, the updated position is calculated using all the neighboring vertices. For an existing vertex \(v\), the
+      updated position is given by:
+    </p>
+    <p class="math">
+      $$
+      (1 - deg(v) \cdot u) \cdot v_{pos} + u \cdot \sum_{n \in N(v)} n_{pos}
+      $$
+    </p>
+    <p>
+      where \(deg(v)\) is the degree of the vertex, \(u\) is a constant either \(3/16\) if \(deg(v) = 3\) or \( 3/(8\cdot deg(v)) \)
+      otherwise. The sum is taken over all the neighboring vertices of \(v\). Once the new positions are computed, the mesh
+      is subdivided by splitting the edges and flipping the edges, and we flip all new edges that connect an old vertex and
+      a new vertex, i.e. the edges that does not lie on the boundary of the 4-way subdivided triangles.
+    </p>
+    <p>
+      To demonstrate the loop subdivision algorithm, we upsampled a mesh using the loop subdivision algorithm. The screenshots
+      below show the mesh before and after several iterations of loop subdivision.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p6-cube0.png" alt="Cube Original" height="260">
+          <p class="label">Cube (Original)</p>
+        </div>
+        <div class="image">
+          <img src="images/p6-cube1.png" alt="Cube Subdivided 1" height="260">
+          <p class="label">Cube (Subdivided 1)</p>
+        </div>
+        <div class="image">
+          <img src="images/p6-cube2.png" alt="Cube Subdivided 2" height="260">
+          <p class="label">Cube (Subdivided 2)</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p6-cube3.png" alt="Cube Subdivided 3" height="260">
+          <p class="label">Cube (Subdivided 3)</p>
+        </div>
+        <div class="image">
+          <img src="images/p6-cube4.png" alt="Cube Subdivided 4" height="260">
+          <p class="label">Cube (Subdivided 4)</p>
+        </div>
+      </div>
+    </div>
+    <p>
+      Subdividing the cube multiple times results in an asymmetric shape. This is because the mesh for the original
+      cube is not symmetric, and the subdivision algorithm does not preserve symmetry. To address this issue, we split
+      the edge on each side to make a cross shape. This ensures that the mesh for each side of the cube is consistent
+      and symmetric, resulting in a symmetric subdivision. The screenshots below show the cube after several iterations
+      of loop subdivision with the edges split to form a cross shape.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p6-cube0-symm.png" alt="Cube Original Symmetric" height="260">
+          <p class="label">Cube (Symmetric)</p>
+        </div>
+        <div class="image">
+          <img src="images/p6-cube1-symm.png" alt="Cube Subdivided 1 Symmetric" height="260">
+          <p class="label">Cube (Subdivided 1 Symmetric)</p>
+        </div>
+        <div class="image">
+          <img src="images/p6-cube2-symm.png" alt="Cube Subdivided 2 Symmetric" height="260">
+          <p class="label">Cube (Subdivided 2 Symmetric)</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p6-cube3-symm.png" alt="Cube Subdivided 3 Symmetric" height="260">
+          <p class="label">Cube (Subdivided 3 Symmetric)</p>
+        </div>
+        <div class="image">
+          <img src="images/p6-cube4-symm.png" alt="Cube Subdivided 4 Symmetric" height="260">
+          <p class="label">Cube (Subdivided 4 Symmetric)</p>
+        </div>
+        <div class="image">
+          <img src="images/p6-cube4-symm-angle.png" alt="Cube Subdivided 4 Symmetric Angle" height="260">
+          <p class="label">Cube (Subdivided 4 Symmetric)</p>
+        </div>
+      </div>
+      <span class="description">
+        As shown in the bottom-right screenshot, pre-processing the cube by splitting edges creates a symmetric subdivision.
+      </span>
+    </div>
+  </body>
+</html>
