@@ -125,6 +125,16 @@
   </head>
   <body onload="onload();">
     <h1>CS 184 Homework 2 Write-Up</h1>
+    <h2>Overview</h2>
+    <p>
+      In this assignment, we implemented fundamental mesh processing operations using the half-edge data structure, covering Bezier curves, 
+      vertex normal calculations, remeshing operations, and Loop Subdivision. We began with De Casteljau’s algorithm for Bezier curves and surfaces, 
+      then computed area-weighted vertex normals to improve shading.
+      Moving into remeshing, we implemented edge flips to modify connectivity and edge splits to insert new vertices while maintaining mesh integrity, 
+      including handling boundary cases. Finally, we implemented Loop Subdivision, refining a coarse mesh into a smoother, 
+      high-resolution version through edge splits, flips, and weighted vertex updates. Debugging was a significant challenge, particularly ensuring pointer correctness, 
+      as misassignments led to holes or broken topology. This assignment deepened our understanding of mesh manipulation and the importance of efficient data structures in 3D graphics.
+    </p>
     <h2>Section 1. Bezier Curves and Surfaces</h2>
     <h3>Part 1. Bezier Curves with 1D de Casteljau Subdivision</h3>
     <p>
@@ -272,14 +282,15 @@
     <h3>Part 5. Edge Split</h3>
     <p>
       For the <code>splitEdge</code> function, We implemented an edge split operation that adds a new vertex at the midpoint of a given edge. 
-      If the edge is on the boundary, we first determined which halfedge was part of the interior face and used that as the reference for splitting. 
+      For non-boundary edges, We created additional halfedges (<code>h5, h5t, h6, h6t, h7, h7t</code>), two new faces (<code>f2</code> and
+      <code>f3</code>), and three new edges (<code>e5, e6, e7</code>) to maintain a consistent mesh structure. The key challenge was ensuring
+      proper (<code>next</code>) and (<code>twin</code>) relationships to maintain correct connectivity and prevent inconsistencies.
+    </p>
+    <p>
+      For extra credit, if the edge is on the boundary, we first determined which halfedge was part of the interior face and used that as the reference for splitting. 
       The split created a new vertex <code>m</code> at the midpoint of the edge and introduced two new halfedges (<code>h3</code> and <code>h4</code>) to maintain proper connectivity. 
       We also created a new face (<code>f1</code>) and two new edges (<code>e3</code> and <code>e4</code>), ensuring all pointers were properly reassigned. 
-      
-      For non-boundary edges, We followed a similar approach but created additional halfedges (<code>h5, h5t, h6, h6t, h7, h7t</code>), two new faces (<code>f2</code> and <code>f3</code>), and three new edges (<code>e5, e6, e7</code>) to maintain a consistent mesh structure. 
-      The most challenging part was ensuring all halfedge relationships, particularly twin assignments, remained correct to prevent mesh inconsistencies.
       We used the <code>check_for(...)</code> function to debug pointer assignments, especially for the twin and next halfedge relationships. 
-      
       Additionally, we flagged the new edges and vertex as <code>isNew</code> to track changes, ensuring that the remeshing process remained consistent with future operations. 
       Below are images showing the mesh before and after splitting edges, a combination of edge splits and flips, as well as splits on boundaries.
     </p>
@@ -410,6 +421,110 @@
       <span class="description">
         As shown in the bottom-right screenshot, pre-processing the cube by splitting edges creates a symmetric subdivision.
       </span>
+    </div>
+    <p>
+      For extra credit we implemented the
+      <a href="https://mrl.cs.nyu.edu/~dzorin/papers/zorin1996ism.pdf">
+        butterfly subdivision algorithm
+      </a>
+      . The butterfly subdivision algorithm applies a different algorithm for computing the new position of the vertices
+      depending on the degree of the vertices that form an edge. We modified the loop subdivision code's part that computes
+      the new vertex positions to use the butterfly subdivision algorithm. 
+    </p>
+    <p>
+      For the edge that connects two vertices of degree 6, we take the 8 points surrounding the edge and compute the
+      new position of the vertex as a weighted average of these points. The weights are given by the formula below.
+    </p>
+    <p class="math">
+      $$
+      a = \frac{1}{2}-w, b = \frac{1}{8}+2w, c = -\frac{1}{16}-w, d = w
+      $$
+    </p>
+    <p>
+      where \(w\) is a small constant. In our code, we used \(10^{-9}\) as the value of \(w\). Then, these weights are applied
+      to the two degree 6 vertices and the 8 surrounding points to compute the new position of the vertex. The screenshot below
+      shows the 10-point stencil used in the butterfly subdivision algorithm.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/ten-point-stencil.png" alt="Ten Point Stencil" height="220">
+          <p class="label">Ten Point Stencil (Zorin, Schröder, Sweldens)</p>
+        </div>
+      </div>
+    </div>
+    <p>
+      For the edge that connects one vertex of degree 6 and one vertex of degree K where K is not 6, we take the K points neighboring
+      the vertex with degree K and use the following weights to compute the new position of the vertex. Here, the weights account for
+      25% of the new position, and the other 75% is weighted to the vertex of degree K. The formula for the weights is given below.
+      
+    </p>
+    <p class="math">
+      $$
+      \mathbf{w} =
+      \begin{cases}
+      \left[ \frac{5}{12},\; -\frac{1}{12},\; -\frac{1}{12} \right], & \text{if } K = 3, \\[1em]
+      \left[ \frac{3}{8},\; 0,\; -\frac{1}{8},\; 0 \right], & \text{if } K = 4, \\[1em]
+      \left[ w_0,\, w_1,\, \dots,\, w_{K-1} \right], & \text{with } w_i = \frac{\frac{1}{4} + \cos\!\left(\frac{2\pi i}{K}\right) + \frac{1}{2}\cos\!\left(\frac{4\pi i}{K}\right)}{K} \text{ for } i = 0, 1, \dots, K-1.
+      \end{cases}
+      $$
+    </p>
+
+    <p>
+      Finally, in the extraordinary case of an edge connecting two vertices that are not of degree 6, we apply the same process as the 
+      edge connecting one vertex of degree 6 and one vertex of degree K, but we apply the method twice, once for each vertex, and average
+      the results to get the new position of the vertex. The screenshot below shows the results of applying the butterfly subdivision
+      algorithm to some meshes.
+    </p>
+
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p6-butterfly-cube-0.png" alt="Cube Original" height="330">
+          <p class="label">Cube (Original)</p>
+        </div>
+        <div class="image">
+          <img src="images/p6-butterfly-cube-4.png" alt="Cube Subdivided 4" height="330">
+          <p class="label">Cube (Subdivided 4)</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p6-butterfly-cube-0-symm.png" alt="Cube Original Symmetric" height="330">
+          <p class="label">Cube (Symmetric)</p>
+        </div>
+        <div class="image">
+          <img src="images/p6-butterfly-cube-4-symm.png" alt="Cube Subdivided 4 Symmetric" height="330">
+          <p class="label">Cube (Subdivided 4 Symmetric)</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p6-butterfly-cow-0.png" alt="Cow Original" height="330">
+          <p class="label">Cow (Original)</p>
+        </div>
+        <div class="image">
+          <img src="images/p6-butterfly-cow-1.png" alt="Cow Subdivided 1" height="330">
+          <p class="label">Cow (Subdivided 1)</p>
+        </div>
+      </div>
+    </div>
+    <h3>Part 7: Extra Credit Art Competition</h3>
+    <p>
+      Our artwork is called boba or pepper, as you can see that a boba cup turns uneven and becomes a pepper after a couple rounds of subdivisions.
+      We considered different shapes and granularity of the boba cup to create the pepper shape(definitely intended).
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p7-undivided.png" alt="Boba Original" height="300">
+          <p class="label">Boba (Original)</p>
+        </div>
+        <div class="image">
+          <img src="images/p7-divided.png" alt="Boba Subdivided" height="300">
+          <p class="label">Pepper (Subdivided)</p>
+        </div>
+      </div>
     </div>
   </body>
 </html>
