@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>CS 184 Homework 3 Write-Up</title>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+      class Image {
+          constructor(src, height, dropdown_label, label) {
+              this.src = src;
+              this.height = height;
+              this.dropdown_label = dropdown_label;
+              this.label = label;
+          }
+      }
+
+      function register_image_selector(image_selector_root, images) {
+          const image_selector = document.getElementById(image_selector_root);
+          if (!image_selector) {
+              alert(`Could not find image selector with id ${image_selector_root}`);
+              return;
+          }
+          const image_selector_image = image_selector.querySelector('.image-selector-image');
+          if (!image_selector_image) {
+              alert(`Could not find image selector image with class ${image_selector_root}`);
+              return;
+          }
+          const image_selector_select = image_selector.querySelector('.image-selector-select');
+          if (!image_selector_select) {
+              alert(`Could not find image selector select with class ${image_selector_root}`);
+              return;
+          }
+          const image_selector_label = image_selector.querySelector('.image-selector-label');
+          if (!image_selector_label) {
+              alert(`Could not find image selector label with class ${image_selector_root}`);
+              return;
+          }
+
+          images.forEach((image, index) => {
+              const option = document.createElement('option');
+              option.value = index;
+              option.text = image.dropdown_label;
+              image_selector_select.appendChild(option);
+          });
+
+          function onchange() {
+              const selected_image = images[image_selector_select.value];
+              image_selector_image.src = selected_image.src;
+              image_selector_image.alt = selected_image.label;
+              image_selector_image.height = selected_image.height;
+
+              image_selector_label.innerHTML = selected_image.label;
+          };
+
+          image_selector_select.addEventListener('change', onchange);
+          onchange();
+      }
+
+      function onload() {
+          const sad_images = [
+              new Image('images/sad.jpeg', 440, 'Sad Image (Original)', 'Sad Image (Original)'),
+              new Image('images/sad_1.jpeg', 440, 'Sad Image (alpha=1)', 'Sad Image (alpha=1)'),
+              new Image('images/sad_4.jpeg', 440, 'Sad Image (alpha=4)', 'Sad Image (alpha=4)'),
+              new Image('images/sad_20.jpeg', 440, 'Sad Image (alpha=20)', 'Sad Image (alpha=20)'),
+          ];
+
+          const classroom_images = [
+              new Image('images/classroom.jpeg', 400, 'Classroom Image (Original)', 'Classroom Image (Original)'),
+              new Image('images/classroom_1.jpeg', 400, 'Classroom Image (alpha=1)', 'Classroom Image (alpha=1)'),
+              new Image('images/classroom_4.jpeg', 400, 'Classroom Image (alpha=4)', 'Classroom Image (alpha=4)'),
+              new Image('images/classroom_20.jpeg', 400, 'Classroom Image (alpha=20)', 'Classroom Image (alpha=20)'),
+          ]
+
+          // register_image_selector('image-selector-sad', sad_images);
+          // register_image_selector('image-selector-classroom', classroom_images);
+      }
+
+      
+  </script>
+    <style>
+            
+
+      body {
+          padding: 20px;
+      }
+
+      .image-container, .image-selector {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-around;
+      }
+
+      .description {
+        font-style: italic;
+      }
+
+      .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
+          text-align: center;
+      }
+
+      .image-container .description, .image-selector .description {
+          margin-bottom: 25px;
+      }
+
+      .math {
+          display: block;
+          width: 100%;
+          text-align: center;
+      }
+
+      .images {
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+      }
+
+      select {
+          width: fit-content;
+          margin: 0 auto;
+          padding: 16px 26px;
+          font-size: 16pt;
+          margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body onload="onload();">
+    <h1>CS 184 Homework 3 Write-Up</h1>
+    <h2>Overview</h2>
+    <p>
+    </p>
+    <p>
+      This write-up is published on <a href="https://mjkwak0184.github.io/cs184/hw3/">https://mjkwak0184.github.io/cs184/hw3/</a>.
+    </p>
+    <h3>Part 1. Ray Generation and Scene Intersection</h3>
+    <p>
+      In this part, we implemented the ray generation and scene intersection parts of the rendering pipeline. The ray generation
+      process involves creating rays from the camera through each pixel of the image plane. More specifically, we sample points
+      on the final image plane and generate rays from the camera through these points. For each pixel, we generate the camera ray
+      by transforming the normalized image coordinates to camera space, generating the ray in camera space, and finally transforming
+      it into a ray in world space. We use this world space ray to trace the path of light through the scene.
+    </p>
+    <p>
+      This method is important in primitive intersection, where we determine whether a ray intersects with primitive objects such as
+      triangles and spheres in the scene. We implemented the ray-triangle intersection algorithm in the <code>Triangle</code> class
+      and the ray-sphere intersection algorithm in the <code>Sphere</code> class. These intersection functions test whether there is
+      an intersection between a primitive object and the input ray and report the location of the nearest intersection point.
+    </p>
+    <p>
+      For the ray-triangle intersection, we used the Moeller-Trumbore algorithm. This algorithm calculates the intersection point of a
+      ray with a triangle by computing the barycentric coordinates of the intersection point. We then use these barycentric coordinates
+      to interpolate the three vertex normals of the triangle to determine the surface normal at the intersection point. We return true
+      only if the intersection occurs at <code>t</code> that lies within the <code>min_t</code> and <code>max_t</code> of the input ray
+      and update <code>max_t</code>.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/1_CBempty.png" alt="CBempty" height="300">
+          <p class="label">Empty</p>
+        </div>
+        <div class="image">
+          <img src="images/1_CBspheres.png" alt="Spheres" height="300">
+          <p class="label">Spheres</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/1_teapot.png" alt="Teapot" height="300">
+          <p class="label">Teapot</p>
+        </div>
+        <div class="image">
+          <img src="images/1_banana.png" alt="Banana" height="300">
+          <p class="label">Banana</p>
+        </div>
+      </div>
+    </div>
+    
+    <h3>Part 2. Bounding Volume Hierarchy</h3>
+    <p>
+      In this part, we implemented a Bounding Volume Hierarchy (BVH) to speed up our path tracer and render large .dae files more efficiently.
+      A BVH is a binary tree that allows us to traverse the scene and quickly discard collections of primitives that a particular ray is guaranteed
+      not to intersect. The BVH construction algorithm recursively divides the primitives into a "left" and "right" collection based on the centroid
+      of their bounding boxes. We chose the split point along the axis that gives us the most benefit, such as the midpoint of an axis or the average
+      of centroids along an axis. We then set the current node's left and right children by recursively calling the BVH construction algorithm. 
+      More specifically, we computed the bounding box of a list of primitives and initialized a new BVHNode with that bounding box. If there are no more
+      than a specified maximum leaf size of primitives in the list, the node we just created is a leaf node, and we update its start and end iterators
+      appropriately. Otherwise, we divide the primitives into a "left" and "right" collection based on the centroid of their bounding boxes and set the
+      current node's left and right children by recursively calling the BVH construction algorithm.
+    </p>
+
+    <p>
+      We also implemented the BVH intersection functions to test whether there is an intersection between the input ray and any primitives in the input BVH.
+      The <code>has_intersection</code> function simply tests for intersection, while the <code>intersect</code> function not only tests for intersection but
+      also reports the nearest intersection via the input <code>Intersection</code> structure. We used these functions as helper functions for each other to
+      simplify our code. The BVH intersection functions recursively traverse the BVH tree and test the ray against every single primitive in the tree.
+      Once these functions are complete, our path tracer became fast enough to render any of our scene files in a matter of seconds. Here are some of the results:
+    </p>
+
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/2_maxplanck.png" alt="Max Planck" height="300">
+          <p class="label">Max Planck</p>
+        </div>
+        <div class="image">
+          <img src="images/2_CBLucy.png" alt="Lucy" height="300">
+          <p class="label">Lucy</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/2_blob.png" alt="Blob" height="300">
+          <p class="label">Blob</p>
+        </div>
+        <div class="image">
+          <img src="images/2_CBdragon.png" alt="Dragon" height="300">
+          <p class="label">Dragon</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Part 3. Direct Illumination</h3>
+    <p>
+      In this part, we implemented direct illumination in our path tracer to simulate light transport in the scene and
+      render images with realistic shading. To that end, we first added zero bounce illumination, which refers to light
+      that reaches the camera without bouncing off anything in the scene. The <code>zero_bounce_radiance</code> function
+      works by returning the emission of the object that was intersected. Then we updated <code>one_bounce_radiance</code>,
+      which returns the direct illumination by hemisphere or importance sampling depending on the <code>direct_hemisphere_sample</code> flag.
+      These zero and one bounce radiance functions are then used in the <code>est_radiance_global_illumination</code> function to
+      return the direct illumination.
+    </p>
+    <p>
+      For hemisphere sampling, the <code>estimate_direct_lighting_hemisphere</code> function estimates the lighting from an intersection
+      by sampling uniformly in a hemisphere. We used this function to estimate how much light arrived at the intersection point from elsewhere
+      and calculate how much outgoing light there is. 
+    </p>
+    <p>
+      The results from hemisphere sampling does converge, but they are quite noisy. To improve this, we implemented importance sampling
+      in the <code>estimate_direct_lighting_importance</code> function. In our implementation within this function, we sample only the
+      directions that point toward each light source. For every light, we generate a ray from the hit point toward the light and evaluate
+      its contribution using the material's BSDF, the cosine term (which accounts for the angle between the surface normal and the light direction),
+      and the probability density function associated with the light sampling. If the ray reaches the light without being blocked (indicating
+      that the point is not in shadow), its contribution is accumulated into the final lighting estimate. This approach reduces noise and
+      improves convergence because it allocates more samples to the most relevant parts of the scene.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/3_CBbunny_H_16_8.png" alt="CBbunny_H_16_8" height="300">
+          <p class="label">Hemisphere Bunny 16/8</p>
+        </div>
+        <div class="image">
+          <img src="images/3_CBbunny_H_64_32.png" alt="CBbunny_H_64_32" height="300">
+          <p class="label">Hemisphere Bunny 64/32</p>
+        </div>
+      </div>
+      <span class="description">
+        Bunny drawn using hemisphere sampling with 16 samples per pixel and 8 samples per light (left) and 64 samples per pixel and 32 samples per light (right).
+      </span>
+      <div class="images">
+        <div class="image">
+          <img src="images/3_bunny_1_1.png" alt="bunny_1_1" height="300">
+          <p class="label">Imporatnce Bunny 1/1</p>
+        </div>
+        <div class="image">
+          <img src="images/3_bunny_64_32.png" alt="bunny_64_32" height="300">
+          <p class="label">Importance Bunny 64/32</p>
+        </div>
+      </div>
+      <span class="description">
+        Bunny drawn using importance sampling with 1 sample per pixel and 1 sample per light (left) and 64 samples per pixel and 32 samples per light (right).<br>
+        Notice how the importance sampling results in less noise and more accurate soft shadows compared to hemisphere sampling.
+      </span>
+      <div class="images">
+        <div class="image">
+          <img src="images/3_CBspheres_1_1.png" alt="CBspheres_1_1" height="300">
+          <p class="label">Importance Spheres 1 light ray</p>
+        </div>
+        <div class="image">
+          <img src="images/3_CBspheres_4_1.png" alt="CBspheres_4_1" height="300">
+          <p class="label">Importance Spheres 4 light rays</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/3_CBspheres_16_1.png" alt="CBspheres_16_1" height="300">
+          <p class="label">Importance Spheres 16 light rays</p>
+        </div>
+        <div class="image">
+          <img src="images/3_CBspheres_64_1.png" alt="CBspheres_64_1" height="300">
+          <p class="label">Importance Spheres 64 light rays</p>
+        </div>
+      </div>
+      <span class="description">
+        Spheres drawn using importance sampling with 1, 4, 16, and 64 light rays. As the number of light rays increases, the noise in the image decreases.
+    </div>
+    <p>
+      To test our results, we rendered the bunny scene with different sample rates. The images above show the bunny scene rendered using hemisphere and 
+      importance sampling at different sample rates. Looking at the results, we can see that importance sampling produces less noise and more accurate soft shadows
+      compared to hemisphere sampling. The walls in the render using hemisphere sampling are speckly, whereas they are perfectly smooth in the render using importance
+      sampling. This difference is due to the inherent randomness in hemisphere sampling, which can lead to higher variance in the calculated light levels between adjacent
+      pixels. In contrast, light sampling only casts rays toward light sources, resulting in a smoother blend of lighting as we move our eyes across the wall. 
+      This also explains why the hemisphere-sampled images look darker overall, as not every sample contributes direct light. In contrast, importance sampling
+      directs rays toward the light sources, guaranteeing that each sample has a high probability of gathering meaningful light information. As a result,
+      the images rendered with importance sampling are much smoother and brighter, with less variation across adjacent pixels. Another notable discrepancy is the
+      halo that appears around the sides of the area light in the hemisphere-sampled render, which does not manifest in the importance-sampled version.
+      By focusing sampling on the areas that contribute the most to the final illumination, importance sampling produces more accurate, noise-free results even
+      with fewer total samples.
+    </p>
+
+  </body>
+</html>
