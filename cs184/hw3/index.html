@@ -336,7 +336,14 @@
           <p class="label">wall-e</p>
         </div>
       </div>
+      <span class="description">
+        examples of using global illumination for the bunny and wall-e scenes.
+      </span>
     </div>
+    <p>
+      in the image with direct lighting, the bunny is illuminated by a single light source, resulting in a flat, shadowless appearance.
+      In contrast, the image with indirect lighting shows the bunny illuminated by multiple light sources, creating soft shadows and more realistic lighting.
+    </p>
     <div class="image-container">
       <div class="images">
         <div class="image">
@@ -348,133 +355,157 @@
           <p class="label">indirect bunny</p>
         </div>
       </div>
+      <span class="description">
+        bunny scene rendered with direct lighting (left) and indirect lighting (right).
+      </span>
     </div>
-    
+    <p>
+      The 2nd bounce reveals initial soft indirect lighting and subtle shadows while the 3rd bounce further diffuses light to enhance global illumination detail, emphasizes on shadows. 
+      Together, they yield a more naturally lit (however, with 3rd bounce alone, it is darker of course) and depth-rich image compared to the flat, direct lighting typical of rasterization.
+    </p>
+
     <div class="image-container">
       <div class="images">
         <div class="image">
-          <img src="images/4_3_false_0_bunny.png" alt="bunnys" height="300">
+          <img src="images/4_3_false_0_bunny.png" alt="bunnys" height="250">
           <p class="label">false 0 bunny</p>
         </div>
         <div class="image">
-          <img src="images/4_3_false_1_bunny.png" alt="4_3_false_1_bunny" height="300">
+          <img src="images/4_3_false_1_bunny.png" alt="bunnys" height="250">
           <p class="label">false 1 bunny</p>
         </div>
         <div class="image">
-          <img src="images/4_3_false_2_bunny.png" alt="4_3_false_2_bunny" height="300">
+          <img src="images/4_3_false_2_bunny.png" alt="bunnys" height="250">
           <p class="label">false 2 bunny</p>
         </div>
       </div>
       <div class="images">
         <div class="image">
-          <img src="images/4_3_false_3_bunny.png" alt="bunnys" height="300">
+          <img src="images/4_3_false_3_bunny.png" alt="bunnys" height="250">
           <p class="label">false 3 bunny</p>
         </div>
         <div class="image">
-          <img src="images/4_3_false_4_bunny.png" alt="4_3_false_1_bunny" height="300">
+          <img src="images/4_3_false_4_bunny.png" alt="bunnys" height="250">
           <p class="label">false 4 bunny</p>
         </div>
         <div class="image">
-          <img src="images/4_3_false_5_bunny.png" alt="4_3_false_2_bunny" height="300">
+          <img src="images/4_3_false_5_bunny.png" alt="bunnys" height="250">
           <p class="label">false 5 bunny</p>
         </div>
       </div>
       <span class="description">
-
+        rendered bunny scene with 0, 1, 2, 3, 4, and 5 bounces with isAccumBounces disabled.
       </span>
     </div>
-    
-    
-
     <p>
-      the 2nd bounce reveals initial soft indirect lighting and subtle shadows while the 3rd bounce further diffuses light to enhance global illumination detail, emphasizes on shadows. 
-      Together, they yield a more naturally lit (however, with 3rd bounce alone, it is darker of course) and depth-rich image compared to the flat, direct lighting typical of rasterization.
+      In comparison, by enabling aisAccumBounces, the 2nd and 3rd bounce produce very similar results, except for the 3rd bounce being slightly brighter.
+      This is because the 3rd bounce is not as dark as the 2nd bounce, as it has more light paths to sample from. The 4th bounce is even brighter, with more light paths to sample from.
     </p>
-
     <div class="image-container">
 
       <div class="images">
         <div class="image">
-          <img src="images/4_3_true_0_bunny.png" alt="bunnys" height="300">
+          <img src="images/4_3_true_0_bunny.png" alt="bunnys" height="250">
           <p class="label">true 0 bunny</p>
         </div>
         <div class="image">
-          <img src="images/4_3_true_1_bunny.png" alt="4_3_false_1_bunny" height="300">
+          <img src="images/4_3_true_1_bunny.png" alt="bunnys" height="250">
           <p class="label">true 1 bunny</p>
         </div>
         <div class="image">
-          <img src="images/4_3_true_2_bunny.png" alt="4_3_false_2_bunny" height="300">
+          <img src="images/4_3_true_2_bunny.png" alt="bunnys" height="250">
           <p class="label">true 2 bunny</p>
         </div>
       </div>
       <div class="images">
         <div class="image">
-          <img src="images/4_3_true_3_bunny.png" alt="bunnys" height="300">
+          <img src="images/4_3_true_3_bunny.png" alt="bunnys" height="250">
           <p class="label">true 3 bunny</p>
         </div>
         <div class="image">
-          <img src="images/4_3_true_4_bunny.png" alt="4_3_false_1_bunny" height="300">
+          <img src="images/4_3_true_4_bunny.png" alt="bunnys" height="250">
           <p class="label">true 4 bunny</p>
         </div>
         <div class="image">
-          <img src="images/4_3_true_5_bunny.png" alt="4_3_false_2_bunny" height="300">
+          <img src="images/4_3_true_5_bunny.png" alt="bunnys" height="250">
           <p class="label">true 5 bunny</p>
         </div>
       </div>
+      <span class="description">
+        rendered bunny scene with 0, 1, 2, 3, 4, and 5 bounces with isAccumBounces enabled.
+      </span>
     </div>
-
     <div class="image-container">
       <div class="images">
         <div class="image">
-          <img src="images/4_CBbunny-0.png" alt="bunnys" height="300">
+          <img src="images/4_CBbunny-0.png" alt="bunnys" height="250">
           <p class="label">bunny 0</p>
         </div>
         <div class="image">
-          <img src="images/4_CBbunny-1.png" alt="4_3_false_1_bunny" height="300">
+          <img src="images/4_CBbunny-1.png" alt="bunnys" height="250">
           <p class="label">bunny 1</p>
         </div>
         <div class="image">
-          <img src="images/4_CBbunny-2.png" alt="4_3_false_2_bunny" height="300">
+          <img src="images/4_CBbunny-2.png" alt="bunnys" height="250">
           <p class="label">bunny 2</p>
         </div>
       </div>
       <div class="images">
         <div class="image">
-          <img src="images/4_CBbunny-3.png" alt="bunnys" height="300">
+          <img src="images/4_CBbunny-3.png" alt="bunnys" height="250">
           <p class="label">bunny 3</p>
         </div>
         <div class="image">
-          <img src="images/4_CBbunny-4.png" alt="4_3_false_1_bunny" height="300">
+          <img src="images/4_CBbunny-4.png" alt="bunnys" height="250">
           <p class="label">bunny 4</p>
         </div>
-        <!-- <div class="image">
-          <img src="images/4_CBbunny-4.png" alt="4_3_false_2_bunny" height="300">
+        <div class="image">
+          <img src="images/4_CBbunny-100.png" alt="bunnys" height="250">
           <p class="label">bunny 100</p>
-        </div> -->
+        </div>
       </div>
+      <span class="description">
+        The bunny scene rendered with 0, 1, 2, 3, 4, and 100 bounces with russian roulette termination enabled. As the number of bounces increases, the image becomes brighter and more detailed.
+      </span>
     </div>
 
     <div class="image-container">
       <div class="images">
         <div class="image">
-          <img src="images/4_wall-e-1.png" alt="walle1" height="300">
+          <img src="images/4_wall-e-1.png" alt="walle1" height="200">
           <p class="label">wall-e 1</p>
         </div>
         <div class="image">
-          <img src="images/4_wall-e-4.png" alt="walle4" height="300">
+          <img src="images/4_wall-e-2.png" alt="walle2" height="200">
+          <p class="label">wall-e 2</p>
+        </div>
+        <div class="image">
+          <img src="images/4_wall-e-4.png" alt="walle4" height="200">
           <p class="label">wall-e 4</p>
         </div>
+        <div class="image">
+          <img src="images/4_wall-e-8.png" alt="walle8" height="200">
+          <p class="label">wall-e 8</p>
+        </div>
       </div>
+
       <div class="images">
         <div class="image">
-          <img src="images/4_wall-e-64.png" alt="walle2" height="300">
+          <img src="images/4_wall-e-16.png" alt="walle16" height="200">
+          <p class="label">wall-e 16</p>
+        </div>
+        <div class="image">
+          <img src="images/4_wall-e-64.png" alt="walle64" height="200">
           <p class="label">wall-e 64</p>
         </div>
         <div class="image">
-          <img src="images/4_wall-e-1024.png" alt="walle4" height="300">
+          <img src="images/4_wall-e-1024.png" alt="walle1024" height="200">
           <p class="label">wall-e 1024</p>
         </div>
       </div>
+      <span class="description">
+        The wall-e scene rendered with 1, 2, 4, 8, 16, 64, and 1024 bounces. As the number of bounces increases, the image becomes brighter and more detailed.
+      </span>
     </div>
 
 
