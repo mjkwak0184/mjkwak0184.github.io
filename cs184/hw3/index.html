@@ -127,7 +127,8 @@
     <h1>CS 184 Homework 3 Write-Up</h1>
     <h2>Overview</h2>
     <p>
-    </p>
+      In this assignment, we implemented a physically-based path tracer capable of generating realistic images by simulating the complex interactions of light with surfaces. We began with the fundamentals of ray generation and scene intersection, designing robust algorithms for ray-primitive tests that serve as the backbone of our rendering pipeline, and then accelerated these computations using a Bounding Volume Hierarchy. Moving on to direct illumination, we compared uniform hemisphere sampling with importance sampling—demonstrating that by focusing samples on light sources, the latter significantly reduces noise and improves convergence. We further expanded our system to support global illumination by incorporating multiple light bounces with unbiased path termination via Russian Roulette, and concluded by introducing adaptive sampling to intelligently allocate more samples to high-variance pixels. This project deepened our understanding of light transport simulation and underscored the importance of efficient algorithms in producing high-quality, noise-free renderings.
+      </p>
     <p>
       This write-up is published on <a href="https://mjkwak0184.github.io/cs184/hw3/">https://mjkwak0184.github.io/cs184/hw3/</a>.
     </p>
@@ -308,5 +309,208 @@
       with fewer total samples.
     </p>
 
+
+    <h3> Part 4. Global Illumination</h3>
+    <p>
+      For indirect lighting, we implemented at_least_one_bounce_radiance, which recursively traces light paths to capture global illumination. 
+      First, we transform the ray’s direction into the local coordinate frame of the intersected surface and initialize the outgoing radiance (L_out). 
+      If isAccumBounces is enabled, or if the current bounce is the final one, we add direct illumination from one_bounce_radiance to L_out.
+
+      If the ray’s depth is greater than 1, we sample an incoming direction (wi) using the BSDF’s sample_f function, ensuring that reflections follow a cosine-weighted hemisphere distribution. 
+      We then compute the probability density function (pdf) and verify that wi contributes valid radiance. 
+      If the sampled direction has a valid cosine weight, we create a new ray originating slightly off the surface (to avoid self-intersection) and trace it recursively.
+      
+      To account for energy conservation, we divide by pdf and scale by the cosine term. 
+      If Russian Roulette termination is applied, the recursion randomly stops early based on a probability threshold, and we adjust the weight of the remaining paths accordingly. 
+      This ensures that longer paths are sampled correctly without introducing bias while improving efficiency. 
+      Finally, L_out accumulates all contributions, resulting in a more realistic rendering of indirect light.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/4_1_bunnys.png" alt="bunnys" height="300">
+          <p class="label">bunny</p>
+        </div>
+        <div class="image">
+          <img src="images/4_1_wall-e.png" alt="wall-e" height="300">
+          <p class="label">wall-e</p>
+        </div>
+      </div>
+    </div>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/4_2_direct_bunny.png" alt="bunnys" height="300">
+          <p class="label">direct bunny</p>
+        </div>
+        <div class="image">
+          <img src="images/4_2_indirect_bunny.png" alt="wall-e" height="300">
+          <p class="label">indirect bunny</p>
+        </div>
+      </div>
+    </div>
+    
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/4_3_false_0_bunny.png" alt="bunnys" height="300">
+          <p class="label">false 0 bunny</p>
+        </div>
+        <div class="image">
+          <img src="images/4_3_false_1_bunny.png" alt="4_3_false_1_bunny" height="300">
+          <p class="label">false 1 bunny</p>
+        </div>
+        <div class="image">
+          <img src="images/4_3_false_2_bunny.png" alt="4_3_false_2_bunny" height="300">
+          <p class="label">false 2 bunny</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/4_3_false_3_bunny.png" alt="bunnys" height="300">
+          <p class="label">false 3 bunny</p>
+        </div>
+        <div class="image">
+          <img src="images/4_3_false_4_bunny.png" alt="4_3_false_1_bunny" height="300">
+          <p class="label">false 4 bunny</p>
+        </div>
+        <div class="image">
+          <img src="images/4_3_false_5_bunny.png" alt="4_3_false_2_bunny" height="300">
+          <p class="label">false 5 bunny</p>
+        </div>
+      </div>
+      <span class="description">
+
+      </span>
+    </div>
+    
+    
+
+    <p>
+      the 2nd bounce reveals initial soft indirect lighting and subtle shadows while the 3rd bounce further diffuses light to enhance global illumination detail, emphasizes on shadows. 
+      Together, they yield a more naturally lit (however, with 3rd bounce alone, it is darker of course) and depth-rich image compared to the flat, direct lighting typical of rasterization.
+    </p>
+
+    <div class="image-container">
+
+      <div class="images">
+        <div class="image">
+          <img src="images/4_3_true_0_bunny.png" alt="bunnys" height="300">
+          <p class="label">true 0 bunny</p>
+        </div>
+        <div class="image">
+          <img src="images/4_3_true_1_bunny.png" alt="4_3_false_1_bunny" height="300">
+          <p class="label">true 1 bunny</p>
+        </div>
+        <div class="image">
+          <img src="images/4_3_true_2_bunny.png" alt="4_3_false_2_bunny" height="300">
+          <p class="label">true 2 bunny</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/4_3_true_3_bunny.png" alt="bunnys" height="300">
+          <p class="label">true 3 bunny</p>
+        </div>
+        <div class="image">
+          <img src="images/4_3_true_4_bunny.png" alt="4_3_false_1_bunny" height="300">
+          <p class="label">true 4 bunny</p>
+        </div>
+        <div class="image">
+          <img src="images/4_3_true_5_bunny.png" alt="4_3_false_2_bunny" height="300">
+          <p class="label">true 5 bunny</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/4_CBbunny-0.png" alt="bunnys" height="300">
+          <p class="label">bunny 0</p>
+        </div>
+        <div class="image">
+          <img src="images/4_CBbunny-1.png" alt="4_3_false_1_bunny" height="300">
+          <p class="label">bunny 1</p>
+        </div>
+        <div class="image">
+          <img src="images/4_CBbunny-2.png" alt="4_3_false_2_bunny" height="300">
+          <p class="label">bunny 2</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/4_CBbunny-3.png" alt="bunnys" height="300">
+          <p class="label">bunny 3</p>
+        </div>
+        <div class="image">
+          <img src="images/4_CBbunny-4.png" alt="4_3_false_1_bunny" height="300">
+          <p class="label">bunny 4</p>
+        </div>
+        <!-- <div class="image">
+          <img src="images/4_CBbunny-4.png" alt="4_3_false_2_bunny" height="300">
+          <p class="label">bunny 100</p>
+        </div> -->
+      </div>
+    </div>
+
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/4_wall-e-1.png" alt="walle1" height="300">
+          <p class="label">wall-e 1</p>
+        </div>
+        <div class="image">
+          <img src="images/4_wall-e-4.png" alt="walle4" height="300">
+          <p class="label">wall-e 4</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/4_wall-e-64.png" alt="walle2" height="300">
+          <p class="label">wall-e 64</p>
+        </div>
+        <div class="image">
+          <img src="images/4_wall-e-1024.png" alt="walle4" height="300">
+          <p class="label">wall-e 1024</p>
+        </div>
+      </div>
+    </div>
+
+
+    <h3>Part 5. Adaptive Sampling</h3>
+    <p>
+      Adaptive sampling helps reduce noise in rendered images by focusing more samples on difficult areas while stopping early in areas that converge quickly.
+      Instead of using a fixed number of samples per pixel, we implemented a loop that checks pixel convergence every samplesPerBatch iterations.
+      For each sample, we traced a ray through the scene, estimated its radiance, and updated running sums for the mean and variance of illuminance.
+      After every batch, we computed a confidence interval to see if the pixel had stabilized—if it had, we stopped sampling early.
+      This approach improves efficiency by reducing unnecessary computations while maintaining image quality.
+      Finally, we stored the total number of samples per pixel to visualize the sampling rate across the image.
+    </p>
+    <p>
+      Here are two images rendered with adaptive sampling: We present the sampling rate image and the final rendered image side by side.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/5_bench.png" alt="Bench" height="300">
+          <p class="label">Bench</p>
+        </div>
+        <div class="image">
+          <img src="images/5_bench_rate.png" alt="Bench" height="300">
+          <p class="label">Bench sampling rate</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/5_blob.png" alt="Blob" height="300">
+          <p class="label">Blob</p>
+        </div>
+        <div class="image">
+          <img src="images/5_blob_rate.png" alt="Blob" height="300">
+          <p class="label">Blob sampling rate</p>
+        </div>
+      </div>
+    </div>
   </body>
 </html>
