@@ -201,24 +201,31 @@
       <div class="images">
         <div class="image">
           <img src="images/2_maxplanck.png" alt="Max Planck" height="300">
-          <p class="label">Max Planck</p>
+          <p class="label">Max Planck (42.6551s -> 0.0727s)</p>
         </div>
         <div class="image">
           <img src="images/2_CBLucy.png" alt="Lucy" height="300">
-          <p class="label">Lucy</p>
+          <p class="label">Lucy (161.2845s -> 0.0545s)</p>
         </div>
       </div>
       <div class="images">
         <div class="image">
           <img src="images/2_blob.png" alt="Blob" height="300">
-          <p class="label">Blob</p>
+          <p class="label">Blob (305.3402s -> 0.0740s)</p>
         </div>
         <div class="image">
           <img src="images/2_CBdragon.png" alt="Dragon" height="300">
-          <p class="label">Dragon</p>
+          <p class="label">Dragon (116.4050s -> 0.0540s)</p>
         </div>
       </div>
     </div>
+
+    <p>
+      By implementing a BVH, we were able to render large .dae files much more efficiently. For example, the Blob model took
+      305.3402 seconds to render without a BVH but only 0.0740 seconds with a BVH. Lastly, the Dragon model took 116.4050
+      seconds to render without a BVH but only 0.0540 seconds with a BVH. These results demonstrate the significant speedup
+      that a BVH provides in rendering complex scenes.
+    </p>
 
     <h3>Part 3. Direct Illumination</h3>
     <p>
