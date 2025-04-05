@@ -52,70 +52,71 @@
   <body>
     <h1>CS 184 Final Project Proposal: Exploring Non-Photorealistic Rendering</h1>
 
-      <h2>Title, Summary and Team Members</h2>
-      <h3 style="font-weight:bold; font-style: italic;">Exploring Non-Photorealistic Rendering</h3>
-      <p>Our project aims to explore different NPR shading schemes applied to object rendering and compare their effects with PBR shading. 
-        Some of the NPR techniques we will be exploring include: sketch-like, cel-shading, pixel shading, and watercolor rendering. We will also attempt to make
-        effeciency comparisons between the NPR and PBR techniques.</p>
-      <p>Team Members: Minjae Kwak, Zixun Wang, Shashwat Bansal, Jaymes Ryan Garbe</p>
+    <h2>Title, Summary and Team Members</h2>
+    <h3 style="font-weight:bold; font-style: italic;">Exploring Non-Photorealistic Rendering</h3>
+    <p>Our project aims to explore different NPR shading schemes applied to object rendering and compare their effects with PBR shading. 
+      Some of the NPR techniques we will be exploring include: sketch-like, cel-shading, pixel shading, and watercolor rendering. We will also attempt to make
+      effeciency comparisons between the NPR and PBR techniques.</p>
+    <p>Team Members: Minjae Kwak, Zixun Wang, Shashwat Bansal, Jaymes Ryan Garbe</p>
 
-      <h2>Problem Description</h2>
-      <p>Our project focuses on exploring non-photorealistic rendering techniques—such as toon shading and 
-        cel-shading—to create expressive visuals that offer both clarity and artistic flexibility beyond traditional photorealistic rendering (PBR).
-         By integrating resources like the Toon Shader Pack with custom path tracing methods, we aim to overcome PBR's limitations, 
-         providing enhanced creative expression for applications ranging from architectural visualization to unique artistic portrayals.</p>
+    <h2>Problem Description</h2>
+    <p>Our project focuses on exploring non-photorealistic rendering techniques—such as toon shading and 
+      cel-shading—to create expressive visuals that offer both clarity and artistic flexibility beyond traditional photorealistic rendering (PBR).
+        By integrating resources like the Toon Shader Pack with custom path tracing methods, we aim to overcome PBR's limitations, 
+        providing enhanced creative expression for applications ranging from architectural visualization to unique artistic portrayals.</p>
 
-      <h2>Goals and Deliverables</h2>
-      <h3>Baseline Plan</h3>
-      <p>For a successful project outcome, we plan to deliver a fully functional non-photorealistic rendering engine 
-        that incorporates multiple artistic styles such as toon shading, cel shading, and watercolor effects. Essential goals include ensuring smooth, 
-        interactive performance, implementing robust shader pipelines, and maintaining a modular design that supports future enhancements and experimentation.</p>
-      <h3>Aspirational Plan</h3>
-      <p>If everything goes well, we aim to enhance the efficiency of our non-photorealistic rendering pipeline 
-        through streamlined shading models and optimized algorithms. Unlike traditional PBR, which often demands high computational resources for realism,
-         our approach will focus on reducing overhead and accelerating rendering times while maintaining distinct, artistic visual quality.</p>
+    <h2>Goals and Deliverables</h2>
+    <h3>Baseline Plan</h3>
+    <p>For a successful project outcome, we plan to deliver a fully functional non-photorealistic rendering engine 
+      that incorporates multiple artistic styles such as toon shading, cel shading, and watercolor effects. Essential goals include ensuring smooth, 
+      interactive performance, implementing robust shader pipelines, and maintaining a modular design that supports future enhancements and experimentation.</p>
+    <h3>Aspirational Plan</h3>
+    <p>If everything goes well, we aim to enhance the efficiency of our non-photorealistic rendering pipeline 
+      through streamlined shading models and optimized algorithms. Unlike traditional PBR, which often demands high computational resources for realism,
+        our approach will focus on reducing overhead and accelerating rendering times while maintaining distinct, artistic visual quality.</p>
 
-        <h2>Schedule</h2>
-        <p>
-          Over the next four weeks, our team will work in stages:
-        </p>
+    <h2>Schedule</h2>
+    <p>
+      Over the next four weeks, our team will work in stages:
+    </p>
+    <ul>
+      <li><strong>Week 1:</strong> Finalize the concept and set up the basic project framework.</li>
+      <li><strong>Week 2:</strong> Begin development of core rendering features (pathtracer) and implement initial efficiency improvements.</li>
+      <li><strong>Week 3:</strong> Refine our techniques and implement more NPR techniques, including comparing our approach to traditional PBR.</li>
+      <li><strong>Week 4:</strong> Conduct final testing, polish the project, and prepare for the presentation.</li>
+    </ul>   
+
+    <h2>Resources</h2>
+    <ul>
+      <li>
+        <strong>Books:</strong>
         <ul>
-          <li><strong>Week 1:</strong> Finalize the concept and set up the basic project framework.</li>
-          <li><strong>Week 2:</strong> Begin development of core rendering features (pathtracer) and implement initial efficiency improvements.</li>
-          <li><strong>Week 3:</strong> Refine our techniques and implement more NPR techniques, including comparing our approach to traditional PBR.</li>
-          <li><strong>Week 4:</strong> Conduct final testing, polish the project, and prepare for the presentation.</li>
-        </ul>   
-
-        <h2>Resources</h2>
+          <li>"Non-Photorealistic Rendering" by Gooch &amp; Gooch</li>
+          <li>Additional texts on graphics techniques and shader programming</li>
+        </ul>
+      </li>
+      <li>
+        <strong>Papers and Articles:</strong>
         <ul>
-          <li>
-            <strong>Books:</strong>
-            <ul>
-              <li>"Non-Photorealistic Rendering" by Gooch &amp; Gooch</li>
-              <li>Additional texts on graphics techniques and shader programming</li>
-            </ul>
-          </li>
-          <li>
-            <strong>Papers and Articles:</strong>
-            <ul>
-              <li>"A Survey on Non-photorealistic Rendering Approaches for Point Cloud Visualization" – a comprehensive review of NPR methods for point cloud visualization(could be an additional feature to implement)</li>
-              <li>Research articles on efficiency improvements compared to traditional PBR</li>
-            </ul>
-          </li>
-          <li>
-            <strong>Online Resources:</strong>
-            <ul>
-              <li>Toon Shader Pack by Komikaze NPR as a reference outcome (<a href="https://blendermarket.com/products/komikaze" target="_blank">komikaze.nl/toon_shader_pack.html</a>)</li>
-              <li>Shader tutorials and forums (e.g., ShaderToy)</li>
-            </ul>
-          </li>
-          <li>
-            <strong>Computing Platform and Tools:</strong>
-            <ul>
-              <li>Development on standard PCs equipped with NVIDIA GPUs, using either Windows or Linux</li>
-              <li>Software: OpenGL/WebGL for rendering, with potential integration of custom or open-source path tracing frameworks</li>
-            </ul>
-          </li>
-        </ul>   
+          <li>"A Survey on Non-photorealistic Rendering Approaches for Point Cloud Visualization" – a comprehensive review of NPR methods for point cloud visualization(could be an additional feature to implement)</li>
+          <li>Research articles on efficiency improvements compared to traditional PBR</li>
+        </ul>
+      </li>
+      <li>
+        <strong>Online Resources:</strong>
+        <ul>
+          <li>Toon Shader Pack by Komikaze NPR as a reference outcome (<a href="https://blendermarket.com/products/komikaze" target="_blank">komikaze.nl/toon_shader_pack.html</a>)</li>
+          <li>Shader tutorials and forums (e.g., ShaderToy)</li>
+        </ul>
+      </li>
+      <li>
+      <strong>Computing Platform and Tools:</strong>
+      <ul>
+        <li>Development on standard PCs equipped with NVIDIA GPUs, using either Windows or Linux</li>
+        <li>Software: OpenGL/WebGL for rendering, with potential integration of custom or open-source path tracing frameworks</li>
+      </ul>
+    </li>
+  </ul>  
+  <p>This project proposal is published on <a href="https://mjkwak0184.github.io/cs184/final_project/proposal/">https://mjkwak0184.github.io/cs184/final_project/proposal</a>.</p> 
   </body>
 </html>
