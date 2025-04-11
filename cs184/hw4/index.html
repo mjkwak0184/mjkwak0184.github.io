@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>CS 184 Homework 4 Write-Up</title>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+    <script>
+      class Image {
+          constructor(src, height, dropdown_label, label) {
+              this.src = src;
+              this.height = height;
+              this.dropdown_label = dropdown_label;
+              this.label = label;
+          }
+      }
+
+      function register_image_selector(image_selector_root, images) {
+          const image_selector = document.getElementById(image_selector_root);
+          if (!image_selector) {
+              alert(`Could not find image selector with id ${image_selector_root}`);
+              return;
+          }
+          const image_selector_image = image_selector.querySelector('.image-selector-image');
+          if (!image_selector_image) {
+              alert(`Could not find image selector image with class ${image_selector_root}`);
+              return;
+          }
+          const image_selector_select = image_selector.querySelector('.image-selector-select');
+          if (!image_selector_select) {
+              alert(`Could not find image selector select with class ${image_selector_root}`);
+              return;
+          }
+          const image_selector_label = image_selector.querySelector('.image-selector-label');
+          if (!image_selector_label) {
+              alert(`Could not find image selector label with class ${image_selector_root}`);
+              return;
+          }
+
+          images.forEach((image, index) => {
+              const option = document.createElement('option');
+              option.value = index;
+              option.text = image.dropdown_label;
+              image_selector_select.appendChild(option);
+          });
+
+          function onchange() {
+              const selected_image = images[image_selector_select.value];
+              image_selector_image.src = selected_image.src;
+              image_selector_image.alt = selected_image.label;
+              image_selector_image.height = selected_image.height;
+
+              image_selector_label.innerHTML = selected_image.label;
+          };
+
+          image_selector_select.addEventListener('change', onchange);
+          onchange();
+      }
+
+      function onload() {
+          const sad_images = [
+              new Image('images/sad.jpeg', 440, 'Sad Image (Original)', 'Sad Image (Original)'),
+              new Image('images/sad_1.jpeg', 440, 'Sad Image (alpha=1)', 'Sad Image (alpha=1)'),
+              new Image('images/sad_4.jpeg', 440, 'Sad Image (alpha=4)', 'Sad Image (alpha=4)'),
+              new Image('images/sad_20.jpeg', 440, 'Sad Image (alpha=20)', 'Sad Image (alpha=20)'),
+          ];
+
+          const classroom_images = [
+              new Image('images/classroom.jpeg', 400, 'Classroom Image (Original)', 'Classroom Image (Original)'),
+              new Image('images/classroom_1.jpeg', 400, 'Classroom Image (alpha=1)', 'Classroom Image (alpha=1)'),
+              new Image('images/classroom_4.jpeg', 400, 'Classroom Image (alpha=4)', 'Classroom Image (alpha=4)'),
+              new Image('images/classroom_20.jpeg', 400, 'Classroom Image (alpha=20)', 'Classroom Image (alpha=20)'),
+          ]
+
+          // register_image_selector('image-selector-sad', sad_images);
+          // register_image_selector('image-selector-classroom', classroom_images);
+      }
+
+      
+  </script>
+    <style>
+            
+
+      body {
+          padding: 20px;
+      }
+
+      .image-container, .image-selector {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-around;
+      }
+
+      .description {
+        font-style: italic;
+      }
+
+      .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
+          text-align: center;
+      }
+
+      .image-container .description, .image-selector .description {
+          margin-bottom: 25px;
+      }
+
+      .math {
+          display: block;
+          width: 100%;
+          text-align: center;
+      }
+
+      .images {
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+      }
+
+      select {
+          width: fit-content;
+          margin: 0 auto;
+          padding: 16px 26px;
+          font-size: 16pt;
+          margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body onload="onload();">
+    <h1>CS 184 Homework 4 Write-Up</h1>
+    <h2>Overview</h2>
+    <p>
+      We built a cloth simulation that uses a grid of point masses connected by springs to mimic real cloth behavior. We implemented Verlet
+      integration to update the cloth’s motion over time, including gravity, collision handling with objects and self-collision using spatial
+      hashing, and spring corrections. On the graphics side, we wrote several shaders for effects like diffuse lighting, Phong shading,
+      texture mapping, bump mapping, displacement mapping, and even environment-mapped reflections. Overall, we learned how to combine
+      physics-based simulation with real-time GPU shading to create dynamic, realistic cloth animations.
+    </p>
+    <p>
+      This write-up is published on <a href="https://mjkwak0184.github.io/cs184/hw4/">https://mjkwak0184.github.io/cs184/hw4/</a>.
+    </p>
+    <h3>Part 1. Masses and springs</h3>
+    <p>
+      In this part, we implemented a mass-spring model to simulate cloth. The model consists of point masses connected
+      by springs, which can be used to simulate the behavior of cloth under various conditions. We created a grid of
+      point masses and added structural, shear, and bending constraints to the springs connecting them. These constraints
+      can be toggled on and off to observe their effects on the cloth simulation. The image below shows the wireframe of
+      the cloth with different constraints applied.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p1-only-shear.png" alt="Only Shear" height="350">
+          <p class="label">Only shear</p>
+        </div>
+        <div class="image">
+          <img src="images/p1-without-shear.png" alt="Without Shear" height="350">
+          <p class="label">Without shear</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p1-all.png" alt="All" height="350">
+          <p class="label">With all constraints</p>
+        </div>
+      </div>
+    </div>
+
+    <h3>Part 2. Simulation via numerical integration</h3>
+    <p>
+      For this part, we used Verlet integration to compute the new positions of the point masses in the cloth simulation. To that end, we first
+      computed the total force acting on each point mass, which included both external forces (like gravity) and spring correction forces. The
+      spring correction forces were calculated using Hooke's law, and we applied them to the two masses at the ends of each spring. We also added 
+      a damping term to simulate energy loss due to friction and heat. 
+    </p>
+    <p>
+      After computing the forces, we used Verlet integration to update the positions of the point masses. This method approximates the new position
+      based on the current position, previous position, and the total acceleration. We also implemented a constraint to ensure that the springs did not
+      become unreasonably deformed during each time step. This was done by correcting the positions of the two point masses connected by a spring to
+      ensure that the spring's length was at most 10% greater than its rest length.
+    </p>
+
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p2.png" alt="Cloth" height="400">
+          <p class="label">Cloth</p>
+        </div>
+      </div>
+    </div>
+    <p>
+      We can change the parameters of the simulation to observe different behaviors. For example, a very low spring constant (ks) results in a cloth that
+      behaves very loosely and does not hold its shape well, while a high spring constant results in a stiffer cloth that retains its shape better.
+      Similarly, changing the density of the cloth affects its weight and how it interacts with gravity. A higher density results in a heavier cloth that
+      falls faster, while a lower density results in a lighter cloth that falls more slowly. The damping term also affects the simulation; a higher damping
+      value results in a cloth that loses energy more quickly, causing it to come to rest faster. Meanwhile, a low damping term results in a cloth that retains
+      its energy longer and bounces more, making it swing back and forth.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p2-500ks.png" alt="500ks" height="350">
+          <p class="label">ks: 500</p>
+        </div>
+        <div class="image">
+          <img src="images/p2-50000ks.png" alt="50000ks" height="350">
+          <p class="label">ks: 50000</p>
+        </div>
+      </div>
+      <span class="description">
+        Cloth with spring constant 500 (left) and 50000 (right).<br>
+        Notice how the cloth with a higher spring constant retains its shape better and is stiffer than the one with a lower spring constant.
+      </span>
+      <div class="images">
+        <div class="image">
+          <img src="images/p2-1.5ds.png" alt="1.5ds" height="350">
+          <p class="label">Density: 1.5</p>
+        </div>
+        <div class="image">
+          <img src="images/p2-150ds.png" alt="150ds" height="350">
+          <p class="label">Density: 150</p>
+        </div>
+      </div>
+      <span class="description">
+        Cloth with density 1.5 (left) and 150 (right).<br>
+        Notice how the cloth with a higher density falls faster and is heavier than the one with a lower density.
+      </span>
+      <div class="images">
+        <div class="image">
+          <img src="images/p2-0damp.png" alt="0d" height="350">
+          <p class="label">Damping: 0</p>
+        </div>
+        <div class="image">
+          <img src="images/p2-1damp.png" alt="1d" height="350">
+          <p class="label">Damping: 1</p>
+        </div>
+      </div>
+      <span class="description">
+        Cloth with damping 0 (left) and 1 (right).<br>
+        The cloth with a higher damping value loses energy more quickly and comes to rest faster and is less bouncy than the one with a lower damping value.
+      </span>
+    </div>
+
+    <h3>Part 3. Handling collisions with other objects</h3>
+    <p>
+      In this part, we implemented collision detection and response for the cloth simulation. We added support for collisions with spheres and planes,
+      allowing the cloth to interact with these objects in a realistic manner. The collision detection is done by checking if the point mass is inside
+      the sphere or plane, and if so, we adjust its position to be just outside the surface of the object. For spheres, we compute the tangent point where the point mass
+      intersects the sphere and adjust its position accordingly. For planes, we compute the tangent point where the point mass intersects the plane and adjust
+      its position to be slightly above the tangent point, on the same side of the plane that the point mass was before crossing over. We also account for friction
+      by scaling the correction vector by (1 - f), where f is the friction coefficient.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p3-5000ks.png" alt="5000ks" height="350">
+          <p class="label">Sphere collision demo</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p3-500ks.png" alt="500ks" height="350">
+          <p class="label">ks: 500</p>
+        </div>
+        <div class="image">
+          <img src="images/p3-50000ks.png" alt="50000ks" height="350">
+          <p class="label">ks: 50000</p>
+        </div>
+      </div>
+      <span class="description">
+        Cloth with spring constant 500 (left) and 50000 (right).<br>
+        Cloth with higher spring constant retains its shape better, thus 
+      </span>
+      <div class="images">
+        <div class="image">
+          <img src="images/p3-peace.png" alt="Peace" height="350">
+          <p class="label">Cloth lying peacefully at rest on the plane</p>
+        </div>
+      </div>
+    </div>
+    
+    <h3>Part 4. Handling self-collisions</h3>
+    <p>
+      Here, we handle self collisions by implementing a spatial hashing algorithm. This allows us to efficiently detect and resolve collisions
+      between point masses in the cloth simulation. The algorithm works by partitioning the 3D space into smaller boxes and mapping each point
+      mass to the box it occupies. When checking for collisions, we only need to check point masses that are in the same or neighboring boxes,
+      significantly reducing the number of comparisons needed.
+    </p>
+    <p>
+      First, we compute the dimensions of the boxes based on the size of the cloth and the number of point masses. We then truncate the coordinates
+      of each point mass to the nearest box, effectively mapping it to a unique key. This key is used to store the point mass in a hash table, where
+      the key is the box index and the value is a list of point masses in that box. When checking for collisions, we look up the point mass's box
+      index and check for collisions with other point masses in the same box. If a collision is detected, we compute a correction vector to separate
+      the point masses and apply it to the point mass that is not colliding with itself. The final correction vector is the average of all pairwise
+      correction vectors, scaled down by the number of simulation steps to improve accuracy.
+    </p>
+    <p>
+      The image below shows the cloth simulation with self-collisions enabled. You can see how the cloth folds on itself and interacts with the plane
+      without clipping through it. The cloth retains its shape and behaves more naturally as it falls.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p4-regular-1.png" alt="P4-1" height="350">
+          <p class="label">1</p>
+        </div>
+        <div class="image">
+          <img src="images/p4-regular-2.png" alt="P4-2" height="350">
+          <p class="label">2</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p4-regular-3.png" alt="P4-3" height="350">
+          <p class="label">3</p>
+        </div>
+        <div class="image">
+          <img src="images/p4-regular-4.png" alt="P4-4" height="350">
+          <p class="label">4</p>
+        </div>
+      </div>
+      <span class="description">
+        The cloth falls and folds on itself without clipping through itself.
+      </span>
+    </div>
+
+    <p>
+      Changing the density and spring constant (ks) affects the behavior of the cloth as it falls on itself. A higher density results in a heavier cloth
+      that falls faster and interacts more strongly with itself. A higher spring constant results in a stiffer cloth that retains its shape better and
+      is less likely to fold on itself. The images below show the cloth with different densities and spring constants.
+    </p>
+
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p4-150ds-1.png" alt="150ds-1" height="350">
+        </div>
+        <div class="image">
+          <img src="images/p4-150ds-2.png" alt="150ds-2" height="350">
+        </div>
+      </div>
+      <span class="description">
+        Cloth with density 150.<br>
+        Compared to the regular cloth with density 15, the cloth with density 150 falls faster and interacts more strongly with itself.
+      </span>
+      <div class="images">
+        <div class="image">
+          <img src="images/p4-50000ks-1.png" alt="50000ks-1" height="350">
+        </div>
+        <div class="image">
+          <img src="images/p4-50000ks-2.png" alt="50000ks-2" height="350">
+        </div>
+      </div>
+      <span class="description">
+        Cloth with spring constant 50000.<br>
+        Compared to the regular cloth with spring constant 5000, the cloth with spring constant 50000 is less likely to fold on itself and spreads out faster.
+      </span>
+    </div>
+
+    <h3>Part 5. Cloth Sim</h3>
+    <p>
+      A shader program is a small set of instructions that runs on the GPU to process images quickly, 
+      and it uses two main parts: the vertex shader and the fragment shader. 
+      The vertex shader works on each point (or vertex) of a 3D model, 
+      transforming its position and calculating extra data like normals or texture coordinates. 
+      Then, the fragment shader uses these smooth, interpolated values to figure out the final color of each pixel, 
+      adding effects like lighting, textures, and material details to make the scene look realistic.
+    </p>
+    <p>
+      The Blinn-Phong shading model is a method we use to calculate the color and brightness 
+      of a surface by breaking the light into three parts: ambient, diffuse, and specular. 
+      Ambient light is like a base level that lights everything evenly, 
+      diffuse light depends on how directly the surface faces the light, 
+      and specular light creates shiny highlights when the light reflects toward our eyes. 
+      A key part of this model is using a "halfway" vector, which is the average direction between the light source and the viewer, 
+      making it simpler to calculate the strength of the specular highlights.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p5-phong-ambient.png" alt="Ambient" height="350">
+          <p class="label">Ambient</p>
+        </div>
+        <div class="image">
+          <img src="images/p5-phong-diffuse.png" alt="Diffuse" height="350">
+          <p class="label">Diffuse</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p5-phong-specular.png" alt="Specular" height="350">
+          <p class="label">Specular</p>
+        </div>
+        <div class="image">
+          <img src="images/p5-phong-result.png" alt="Result" height="350">
+          <p class="label">Result</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p5-texture.png" alt="Texture" height="400">
+          <p class="label">Texture</p>
+        </div>
+      </div>
+    </div>
+    <p>
+      Bump mapping gives an illusion of surface details by tweaking the way light interacts with a flat surface, 
+      so while it makes cloth and spheres look textured, their actual shapes remain unchanged. Displacement mapping, 
+      on the other hand, physically alters the surface geometry, resulting in a more wrinkly, pronounced, 
+      and realistic texture that changes the silhouette of the object.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p5-bump.png" alt="Bump" height="350">
+          <p class="label">Bump</p>
+        </div>
+        <div class="image">
+          <img src="images/p5-bump-cloth.png" alt="Bump cloth" height="350">
+          <p class="label">Bump cloth</p>
+        </div>
+      </div>
+    </div>
+    <p>
+      In our tests, bump mapping only alters the surface normals, so the sphere’s outline remains the same regardless of mesh resolution.
+      With a coarse mesh (-o 16 -a 16), the bump mapping shows some blocky shading due to large polygons, but the overall shape is smooth.
+      By contrast, displacement mapping changes the actual geometry. On a coarse sphere, the displaced bumps appear jagged and faceted because
+      there aren’t enough vertices to capture smooth curves, while on a finer mesh (-o 128 -a 128) the geometry deforms more naturally, yielding 
+      a smoother, more realistic surface.
+    </p>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p5-bump-16.png" alt="Bump 16" height="350">
+          <p class="label">Bump 16</p>
+        </div>
+        <div class="image">
+          <img src="images/p5-bump-128.png" alt="Bump 128" height="350">
+          <p class="label">Bump 128</p>
+        </div>
+      </div>
+      <div class="images">
+        <div class="image">
+          <img src="images/p5-disp-16.png" alt="Displacement 16" height="350">
+          <p class="label">Displacement 16</p>
+        </div>
+        <div class="image">
+          <img src="images/p5-disp-128.png" alt="Displacement 128" height="350">
+          <p class="label">Displacement 128</p>
+        </div>
+      </div>
+    </div>
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p5-mirror-all.png" alt="Mirror" height="350">
+          <p class="label">Mirror</p>
+        </div>
+        <div class="image">
+          <img src="images/p5-mirror-fallen.png" alt="Mirror fallen" height="350">
+          <p class="label">Mirror fallen</p>
+        </div>
+      </div>
+    </div>
+    <p>
+      We created a custom shader that combines five techniques into a single material. 
+      In our vertex shader, we use a height map to offset each vertex along its normal (displacement mapping),
+      which gives our geometry actual bumps. In the fragment shader, we blend a base texture with a user-defined color, 
+      then use the same height map to adjust the normals (bump mapping) for better lighting via a Phong model. 
+      We also calculate a reflection vector to sample an environment map (cube map) for mirror-like reflections, 
+      and finally, we mix the lit surface with the reflective output using a time-modulated factor to add a dynamic, shiny effect.
+    </p>
+
+    <div class="image-container">
+      <div class="images">
+        <div class="image">
+          <img src="images/p5-custom.png" alt="Custom" height="400">
+          <p class="label">Custom</p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
