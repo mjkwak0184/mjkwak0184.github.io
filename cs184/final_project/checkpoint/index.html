@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>Project Proposal</title>
+    <style>
+            
+
+      body {
+          padding: 20px;
+      }
+
+      .image-container, .image-selector {
+          display: flex;
+          flex-direction: column;
+          justify-content: space-around;
+      }
+
+      .description {
+        font-style: italic;
+      }
+
+      .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
+          text-align: center;
+      }
+
+      .image-container .description, .image-selector .description {
+          margin-bottom: 25px;
+      }
+
+      .math {
+          display: block;
+          width: 100%;
+          text-align: center;
+      }
+
+      .images {
+          display: flex;
+          justify-content: space-around;
+          align-items: center;
+      }
+
+      select {
+          width: fit-content;
+          margin: 0 auto;
+          padding: 16px 26px;
+          font-size: 16pt;
+          margin-bottom: 20px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>CS 184 Final Project Progress Report: Toon Shading Implementation</h1>
+
+    <h2>1. Summary of Accomplishments</h2>
+    <p>
+        Developed a standalone C++ OpenGL application (using GLEW, GLFW, GLM) as an NPR testbed. Implemented a core GLSL toon/cel shader
+        with quantized lighting. Integrated <code>tinyobjloader</code> for loading <code>.obj</code> models (e.g., Teapot) and added
+        basic mouse rotation/zoom controls. Successfully debugged and resolved model loading issues related to missing vertex normals.
+    </p>
+    <h2>2. Preliminary Results</h2>
+    <p>
+        The application renders <code>.obj</code> models (with normals) correctly using the toon shader, displaying characteristic flat color bands.
+        Shading dynamically responds to model rotation relative to the light source. The interactive framework is stable and suitable
+        for further shader experimentation.
+    </p>
+
+    <h2>3. Reflection on Progress Relative to Plan</h2>
+    <p>
+        Progress aligns with Week 1 goals (framework setup) and partially with Week 2-3 (implemented one NPR style - toon shading). However,
+        we are lagging on implementing other proposed NPR styles (sketch, watercolor, pixel), integrating with path tracing (current work
+        uses rasterization), performing PBR comparison, and efficiency analysis. Valuable shader development experience gained, but scope
+        needs adjustment or acceleration.
+    </p>
+
+    <h2>4. Updated Work Plan</h2>
+    <ul>
+        <li>
+            Unless advised otherwise, we will continue working with OpenGL shaders and next steps will be implementing more NPR shader techniques
+            (outlines, watercolor, etc.) and a PBR shader for comparison. We anticipate purely-photorealistic-based-rendering to be harder to
+            implement and might need to restrict our focus to NPR.
+        </li>
+        <li>
+            Once we have constructed some initial implementations of some more convoluted shading techniques, we will release a google form on Ed
+            to the class to gauge whether the output conveys the desired effect. For example, we could ask “On a scale of 1 to 10 (with 1
+            being ‘strongly disagree’ and 10 being ‘strongly agree’) would you agree that this image is something you might see in a comic
+            book?” Shaders which report poor correlation with the intended style might need to be reworked. We could also include an open-ended
+            feedback section where students can share which aspects of the image they specifically like or dislike.
+        </li>
+    </ul>
+  <p>This progress report is published on <a href="https://mjkwak0184.github.io/cs184/final_project/checkpoint/">https://mjkwak0184.github.io/cs184/final_project/checkpoint</a>.</p> 
+  </body>
+</html>
