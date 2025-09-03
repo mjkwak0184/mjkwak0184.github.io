@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CS 180 Project 0</title>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <style>
+
+            body {
+                padding: 20px;
+            }
+
+            .image-container, .image-selector {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+            }
+
+            .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
+                text-align: center;
+            }
+
+            .image-container .description, .image-selector .description {
+                margin-bottom: 25px;
+            }
+
+            .math {
+                display: block;
+                width: 100%;
+                text-align: center;
+            }
+
+            .images {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+            
+            select {
+                width: fit-content;
+                margin: 0 auto;
+                padding: 16px 26px;
+                font-size: 16pt;
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body onload="onload();">
+        <h1>Becoming Friends With Your Camera</h1>
+        <h3>Part 1. Selfie: The Wrong Way vs. The Right Way</h3>
+        <p>
+            
+        </p>
+        
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/selfie_closeup.jpeg" alt="Selfie Close-Up" height="280">
+                    <p class="label">Selfie Close-Up</p>
+                </div>
+                <div class="image">
+                    <img src="images/selfie_regular.jpeg" alt="Selfie Regular" height="280">
+                    <p class="label">Selfie Regular</p>
+                </div>
+            </div>
+        </div>
+        <p>
+            In this part, I took two photos of myself. The left photo is taken up close, while the right photo is
+            taken further away. The photo that is taken close up distorts my facial features, making the center of my
+            face appear larger and more exaggerated.
+        </p>
+
+        <h3>Part 2. Architectural Perspective Compression</h3>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/architecture_zoom.jpeg" alt="Architecture Zoom" height="280">
+                    <p class="label">Architecture Zoom</p>
+                </div>
+                <div class="image">
+                    <img src="images/architecture_regular.jpeg" alt="Architecture Regular" height="280">
+                    <p class="label">Architecture Regular</p>
+                </div>
+            </div>
+        </div>
+        <p>
+            In this part, I experimented with the positioning of the camera such that the photo on the left
+            is taken from further away, while the image on the right is a wider angle shot taken closer.
+            We notice that the image taken from further away appears more compressed, especially along the road.
+        </p>
+        <h3>Part 3. The Dolly Zoom</h3>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/dolly.gif" alt="Dolly Zoom" height="400">
+                    <p class="label">Dolly Zoom</p>
+                </div>
+            </div>
+        </div>
+        <p>
+            Notice how the background elements change in size and position relative to the subject as the camera zooms in or out.
+        </p>
+    </body>
+</html>

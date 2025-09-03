@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CS 180 Project 2</title>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <script>
+            class Image {
+                constructor(src, height, dropdown_label, label) {
+                    this.src = src;
+                    this.height = height;
+                    this.dropdown_label = dropdown_label;
+                    this.label = label;
+                }
+            }
+    
+            function register_image_selector(image_selector_root, images) {
+                const image_selector = document.getElementById(image_selector_root);
+                if (!image_selector) {
+                    alert(`Could not find image selector with id ${image_selector_root}`);
+                    return;
+                }
+                const image_selector_image = image_selector.querySelector('.image-selector-image');
+                if (!image_selector_image) {
+                    alert(`Could not find image selector image with class ${image_selector_root}`);
+                    return;
+                }
+                const image_selector_select = image_selector.querySelector('.image-selector-select');
+                if (!image_selector_select) {
+                    alert(`Could not find image selector select with class ${image_selector_root}`);
+                    return;
+                }
+                const image_selector_label = image_selector.querySelector('.image-selector-label');
+                if (!image_selector_label) {
+                    alert(`Could not find image selector label with class ${image_selector_root}`);
+                    return;
+                }
+    
+                images.forEach((image, index) => {
+                    const option = document.createElement('option');
+                    option.value = index;
+                    option.text = image.dropdown_label;
+                    image_selector_select.appendChild(option);
+                });
+
+                function onchange() {
+                    const selected_image = images[image_selector_select.value];
+                    image_selector_image.src = selected_image.src;
+                    image_selector_image.alt = selected_image.label;
+                    image_selector_image.height = selected_image.height;
+    
+                    image_selector_label.innerHTML = selected_image.label;
+                };
+    
+                image_selector_select.addEventListener('change', onchange);
+                onchange();
+            }
+    
+            function onload() {
+                const sad_images = [
+                    new Image('images/sad.jpeg', 440, 'Sad Image (Original)', 'Sad Image (Original)'),
+                    new Image('images/sad_1.jpeg', 440, 'Sad Image (alpha=1)', 'Sad Image (alpha=1)'),
+                    new Image('images/sad_4.jpeg', 440, 'Sad Image (alpha=4)', 'Sad Image (alpha=4)'),
+                    new Image('images/sad_20.jpeg', 440, 'Sad Image (alpha=20)', 'Sad Image (alpha=20)'),
+                ];
+
+                const classroom_images = [
+                    new Image('images/classroom.jpeg', 400, 'Classroom Image (Original)', 'Classroom Image (Original)'),
+                    new Image('images/classroom_1.jpeg', 400, 'Classroom Image (alpha=1)', 'Classroom Image (alpha=1)'),
+                    new Image('images/classroom_4.jpeg', 400, 'Classroom Image (alpha=4)', 'Classroom Image (alpha=4)'),
+                    new Image('images/classroom_20.jpeg', 400, 'Classroom Image (alpha=20)', 'Classroom Image (alpha=20)'),
+                ]
+    
+                register_image_selector('image-selector-sad', sad_images);
+                register_image_selector('image-selector-classroom', classroom_images);
+            }
+    
+            
+        </script>
+        <style>
+
+            body {
+                padding: 20px;
+            }
+
+            .image-container, .image-selector {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+            }
+
+            .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
+                text-align: center;
+            }
+
+            .image-container .description, .image-selector .description {
+                margin-bottom: 25px;
+            }
+
+            .math {
+                display: block;
+                width: 100%;
+                text-align: center;
+            }
+
+            .images {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+            
+            select {
+                width: fit-content;
+                margin: 0 auto;
+                padding: 16px 26px;
+                font-size: 16pt;
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body onload="onload();">
+        <h1>Fun with Filters and Frequencies</h1>
+        <h2>Part I - Fun with Filters</h2>
+        <h3>Finite Difference Operator</h3>
+        <p>
+            In this part, I explore how convolution kernel filters can be used to detect edges in an image.
+            Knowing that an image is represented as a 2D array, it could be said that edges of an image are
+            areas where the intensity of the pixels change rapidly. To detect these edges, we can use a filter
+            that is sensitive to changes in intensity. One of the most simple filters that achieves this is the
+            filter \( \mathbf{D_x} = \left[ 1 \,\, -1 \right]\). This filter, when convolved with an image, will
+            highlight the vertical edges in the image. Similarly, the filter \( \mathbf{D_y} = \left[ 1 \,\, -1 \right]^T \)
+            will highlight the horizontal edges in the image. Then, the gradient magnitude is computed by the following
+            formula.
+        </p>
+        <h4 class="math">
+            \(\text{m} = \sqrt{(\text{edges_x})^2 + (\text{edges_y})^2}\)
+        </h4>
+        <p>
+            Finding the gradient magnitude is useful since it provides a single value that represents the strength
+            of the edges in the image, regardless of their direction. Then, the gradient magnitude image is binarized
+            by setting a threshold to further remove noise. Here are the results:
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/cameraman.png" alt="Cameraman" height="220">
+                    <p class="label">Cameraman</p>
+                </div>
+                <div class="image">
+                    <img src="images/cameraman_dx.png" alt="Cameraman D_x" height="220">
+                    <p class="label">Cameraman convolved with \(\mathbf{D_x}\)</p>
+                </div>
+                <div class="image">
+                    <img src="images/cameraman_dy.png" alt="Cameraman D_y" height="220">
+                    <p class="label">Camerman convolved with \(\mathbf{D_y}\)</p>
+                </div>
+            </div>
+            <span class="description">
+                <i>
+                Cameraman image convolved with \( \mathbf{D_x} \) and \( \mathbf{D_y} \) filters.<br>
+                Observe how vertical edges are highlighted with the \( \mathbf{D_x} \) image (e.g. the vertical rod in the tripod)<br>
+                and horizontal edges in the \( \mathbf{D_y} \) image (e.g. the horizon and buildings in the background).
+                </i>
+            </span>
+            <div class="images">
+                <div class="image">
+                    <img src="images/cameraman_gradient_magnitude.png" alt="Cameraman D_x" height="220">
+                    <p class="label">Cameraman (Gradient magnitude)<br>&nbsp;</p>
+                </div>
+                <div class="image">
+                    <img src="images/cameraman_binary.png" alt="Cameraman D_y" height="220">
+                    <p class="label">Cameraman (Gradient magnitude)<br>Binarized with threshold 0.23.</p>
+                </div>
+            </div>
+            <span class="description">
+                <i>
+                Gradient magnitude image generated by square root of sum of squares of \( \mathbf{D_x} \) and \( \mathbf{D_y} \) images.<br>
+                The image on the right has been binarized with threshold of 0.23 which highlights the edges in the image while removing noise.
+                </i>
+            </span>
+        </div>
+        <p>
+            Although the binarization threshold of 0.23 works well for the Cameraman image, it still struggles to
+            remove noise in the image while keeping valid edges. To address this, Gaussian blur can be applied to
+            the image to remove noise before applying the gradient magnitude filter. Here are the results:
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/cameraman_gaussian.png" alt="Blurred Cameraman" height="220">
+                    <p class="label">Blurred Cameraman<br><br>&nbsp;</p>
+                </div>
+                <div class="image">
+                    <img src="images/cameraman_gradient_magnitude_gaussian_separate.png" alt="Blurred Cameraman (Gradient magnitude)" height="220">
+                    <p class="label">Blurred Cameraman<br>(Gradient magnitude)<br>&nbsp;</p>
+                </div>
+                <div class="image">
+                    <img src="images/cameraman_binary_gaussian_separate.png" alt="Blurred Cameraman (Binarized)" height="220">
+                    <p class="label">Blurred Cameraman<br>(Gradient magnitude)<br>Binarized with threshold 0.03.</p>
+                </div>
+            </div>
+            <span class="description">
+                <i>
+                    Here, the Cameraman image has been blurred with a Gaussian filter of size 15 and standard deviation 3 to remove noise.<br>
+                    Notice how the binarized images successfully highlight the edges in the image while removing noise.
+                </i>
+            </span>
+        </div>
+        <h3>Derivative of Gaussian Filter</h3>
+        <p>
+            The process of blurring an image with a Gaussian filter and then taking the derivative of the blurred
+            image can also be performed by a single convolution operation with the derivative of Gaussian filter.
+            This can improve the efficiency of the process by reducing the number of convolution operations on original image. 
+            I verify that this process is equivalent to running Gaussian blur and then taking the gradient magnitude of the blurred image.
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/cameraman_combined_filter_x.png" alt="Combined Filter" style="image-rendering: pixelated;" height="220">
+                    <p class="label">Combined Filter<br>(x-direction)<br>\(k_{size} = 15\), \(\sigma = 3\)</p>
+                </div>
+                <div class="image">
+                    <img src="images/cameraman_gradient_magnitude_gaussian.png" alt="" height="220">
+                    <p class="label">Blurred Cameraman<br>(Gradient magnitude)<br>(Single convolution)</p>
+                </div>
+                <div class="image">
+                    <img src="images/cameraman_binary_gaussian.png" alt="Blurred Cameraman (Binarized, One-convolution)" height="220">
+                    <p class="label">Blurred Cameraman<br>(Gradient magnitude, binarized)<br>(Single convolution)</p>
+                </div>
+            </div>
+            <span class="description">
+                <i>
+                    The images here are obtained by a single convolution operation with the derivative of Gaussian filter.<br>
+                    These images are equivalent to running Gaussian blur and then taking the gradient magnitude of the blurred image.
+                </i>
+            </span>
+        </div>
+
+        <h2>Part II - Fun with Frequencies</h2>
+        <h3>Image Sharpening</h3>
+        <p>
+            Here, we explore the technique of unsharp masking used to sharpen an image. The technique works by
+            creating a blurred version of the image with Gaussian blur and then subtracting the blurred image
+            from the original image. Since the blurred image removed the low-frequency components of the image,
+            the subtraction results in an image that contains high frequencies of the original image. The high
+            frequencies are then added back to the original image to further sharpen it. Mathematically, it can
+            be represented as the equation below, where \( f \) is the original image, \( g \) is the Gaussian
+            kernel (thus \( f * g \) is the blurred image), and \( \alpha \) is a constant that controls the
+            amount of sharpening.
+        </p>
+        <h4 class="math">
+            \( f + \alpha(f - f * g) = (1 + \alpha)f - \alpha f * g = f * \left( (1 + \alpha)e - \alpha g \right) \)
+        </h4>
+        <p>            
+            The formula \( f + \alpha(f - f * g) \) can also be rearranged to \( f * \left( (1 + \alpha)e - \alpha g \right) \),
+            where \( e \) is the identity kernel. This shows that the sharpening process can be applied as a 
+            single convolution operation with the kernel \( (1 + \alpha)e - \alpha g \). I have also noticed that
+            running convolution reduces the size of the image, so I have reflected the image around the edge to
+            maintain the original image size. Here are the final results:
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/taj.jpg" alt="Taj Mahal Original" height="220">
+                    <p class="label">Taj Mahal (Original)</p>
+                </div>
+                <div class="image">
+                    <img src="images/taj_low.jpg" alt="Taj Mahal (Low-pass)" height="220">
+                    <p class="label">Taj Mahal (Low-pass)</p>
+                </div>
+                <div class="image">
+                    <img src="images/taj_high.jpg" alt="Taj Mahal (High-pass)" height="220">
+                    <p class="label">Taj Mahal (High-pass)</p>
+                </div>
+            </div>
+        </div>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/taj.jpg" alt="Taj Mahal (alpha=0.5)" height="220">
+                    <p class="label">Taj Mahal (\(\alpha = 0.5\))</p>
+                </div>
+                <div class="image">
+                    <img src="images/taj_1.jpg" alt="Taj Mahal (alpha=1)" height="220">
+                    <p class="label">Taj Mahal (\(\alpha = 1\))</p>
+                </div>
+                <div class="image">
+                    <img src="images/taj_4.jpg" alt="Taj Mahal (alpha=4)" height="220">
+                    <p class="label">Taj Mahal (\(\alpha = 4\))</p>
+                </div>
+                <div class="image">
+                    <img src="images/taj_20.jpg" alt="Taj Mahal (alpha=20)" height="220">
+                    <p class="label">Taj Mahal (\(\alpha = 20\))</p>
+                </div>
+            </div>
+            <span class="description"><i>Sharpened image of Taj Mahal.</i></span>
+        </div>
+        <div class="image-selector" id="image-selector-sad">
+            <div class="images">
+                <div class="image">
+                    <img class="image-selector-image">
+                    <p class="label image-selector-label"></p>
+                </div>
+            </div>
+            <select class="image-selector-select"></select>
+            <span class="description"><i>Sharpened image of a locked wheel. Notice how the spokes of the wheel get sharpened.</i></span>
+        </div>
+        <div class="image-selector" id="image-selector-classroom">
+            <div class="images">
+                <div class="image">
+                    <img class="image-selector-image">
+                    <p class="label image-selector-label"></p>
+                </div>
+            </div>
+            <select class="image-selector-select"></select>
+            <span class="description"><i>Sharpened image of a chalkboard. Higher \(\alpha\) values make faint chalk marks more prominent.</i></span>
+        </div>
+
+        <h3>Hybrid Images</h3>
+        <p>
+            Hybrid images are images that look like one image up close and another image from a distance. This
+            effect is achieved by combining the high-frequency components of one image with the low-frequency
+            components of another image. The low-frequency component is obtained by running a Gaussian blur filter
+            on the original image, and the high-frequency component is obtained by subtracting the low-pass
+            filtered image from the original image. Then, the low-pass image of one image is added to the high-pass
+            image of another image to create the hybrid image. I have also enabled color for hybrid images, and since
+            the low-pass image dominates the color, it adds more vibrancy to the image when it is viewed afar. However,
+            in cases like Derek and Nutmeg hybrid image, Derek dominating the color can make Nutmeg less noticeable.
+            The results of the hybrid images are shown below.
+            
+            
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/derek.jpg" alt="Derek" height="220">
+                    <p class="label">Derek</p>
+                </div>
+                <div class="image">
+                    <img src="images/nutmeg.jpg" alt="Nutmeg" height="220">
+                    <p class="label">Nutmeg</p>
+                </div>
+                <div class="image">
+                    <img src="images/derek_nutmeg_hybrid_gray.jpg" alt="Derek Nutmeg Hybrid Gray" height="220">
+                    <p class="label">Derek Nutmeg Hybrid (Gray)</p>
+                </div>
+                <div class="image">
+                    <img src="images/derek_nutmeg_hybrid.jpg" alt="Derek Nutmeg Hybrid" height="220">
+                    <p class="label">Derek Nutmeg Hybrid (Color)</p>
+                </div>
+            </div>
+            <span class="description"><i>Hybrid image of a Derek and his cat Nutmeg. \(\sigma_{derek}=5.8\), \(\sigma_{owl}=4.6\), \(k_{size}=17\).
+            <br>The image looks like Nutmeg up close. The combined image is cropped and rotated to remove black borders.</i></span>
+        </div>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/frog.jpg" alt="Frog" height="220">
+                    <p class="label">Frog</p>
+                </div>
+                <div class="image">
+                    <img src="images/owl.jpg" alt="Owl" height="220">
+                    <p class="label">Owl</p>
+                </div>
+                <div class="image">
+                    <img src="images/frog_owl_hybrid_gray.jpg" alt="Frog Owl Hybrid Gray" height="220">
+                    <p class="label">Frog Owl Hybrid (Gray)</p>
+                </div>
+                <div class="image">
+                    <img src="images/frog_owl_hybrid.jpg" alt="Frog Owl Hybrid" height="220">
+                    <p class="label">Frog Owl Hybrid (Color)</p>
+                </div>
+            </div>
+            <span class="description"><i>Hybrid image of a black rain frog and an owl. \(\sigma_{frog}=2.4\), \(\sigma_{owl}=3.6\), \(k_{size}=11\).
+            <br>The image looks like an owl up close. The combined image is cropped and rotated to remove black borders.</i></span>
+        </div>
+        <h4>Frequency Analysis of Frog Owl Hybrid Image</h4>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/frog_fft.jpg" alt="Frog FFT" height="200">
+                    <p class="label">Frog FFT</p>
+                </div>
+                <div class="image">
+                    <img src="images/frog_filtered_fft.jpg" alt="Frog Filtered FFT" height="200">
+                    <p class="label">Frog Filtered FFT</p>
+                </div>
+                <div class="image">
+                    <img src="images/owl_fft.jpg" alt="Owl FFT" height="200">
+                    <p class="label">Owl FFT</p>
+                </div>
+                <div class="image">
+                    <img src="images/owl_filtered_fft.jpg" alt="Owl Filtered FFT" height="200">
+                    <p class="label">Owl Filtered FFT</p>
+                </div>
+                <div class="image">
+                    <img src="images/frog_owl_fft.jpg" alt="Frog Owl Hybrid FFT" height="200">
+                    <p class="label">Frog Owl Hybrid FFT</p>
+                </div>
+            </div>
+            <span class="description"><i>Frequency analysis of the frog, owl, and hybrid images.<br>
+                The hybrid image has the low-frequency components of the frog and high-frequency components of the owl.
+            </i></span>
+        </div>
+        <h4>Failure example:</h4>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/earth.jpg" alt="Earth" height="220">
+                    <p class="label">Earth</p>
+                </div>
+                <div class="image">
+                    <img src="images/marble.jpg" alt="Marble" height="220">
+                    <p class="label">Marble</p>
+                </div>
+                <div class="image">
+                    <img src="images/earth_marble_hybrid_gray.jpg" alt="Earth Marble Hybrid Gray" height="220">
+                    <p class="label">Earth Marble Hybrid (Gray)</p>
+                </div>
+                <div class="image">
+                    <img src="images/earth_marble_hybrid.jpg" alt="Earth Marble Hybrid" height="220">
+                    <p class="label">Earth Marble Hybrid (Color)</p>
+                </div>
+            </div>
+            <span class="description"><i>Hybrid image of Earth and a marble. \(\sigma_{earth}=2\), \(\sigma_{marble}=10\), \(k_{size}= 40 \).
+                <br>Although the marble texture is only visible up close, it still looks like Earth.
+            </i></span>
+        </div>
+
+        <h3>Multiresolution Blending</h3>
+        <p>
+            In this part, I explore the technique of multiresolution blending to combine two images together. This
+            technique works by creating a Laplacian stack for each image and then blending the stacks
+            together. Specifically, I take the two images and create Laplacian stacks at each level. I also create
+            a stack of Gaussian filter by running low-pass Gaussian filtering on the black-white filter image. These two stacks
+            are then added up by the following formula:
+        </p>
+        <h4 class="math">
+            \( I = SG_k + \sum_{i=1}^{k} l_k^A \cdot m_k + l_k^B \cdot \left(1 - m_k\right) \)
+        </h4>
+        <p>
+            , where \(l_k^A\) is the Laplacian stack layer \(k\) of image \(A\), and \(m_k\) is the \(k\)th layer of Gaussian
+            low-pass filter stack. Finally, the base Gaussian split image, \(SG_k\), obtained by running Gaussian low-pass filter \(k\) times
+            on image combined with the black-white filter, is added to the final Laplacian stack sum \(L\) to obtain the final image.
+            The results on Oraple and other images are shown below.
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/oraple_gaussian_0.jpg" alt="Oraple Gaussian 1" height="110">
+                    <p class="label">Oraple Gaussian #1</p>
+                </div>
+                <div class="image">
+                    <img src="images/oraple_gaussian_1.jpg" alt="Oraple Gaussian 2" height="110">
+                    <p class="label">Oraple Gaussian #2</p>
+                </div>
+                <div class="image">
+                    <img src="images/oraple_gaussian_2.jpg" alt="Oraple Gaussian 3" height="110">
+                    <p class="label">Oraple Gaussian #3</p>
+                </div>
+                <div class="image">
+                    <img src="images/oraple_gaussian_3.jpg" alt="Oraple Gaussian 4" height="110">
+                    <p class="label">Oraple Gaussian #4</p>
+                </div>
+                <div class="image">
+                    <img src="images/oraple_gaussian_4.jpg" alt="Oraple Gaussian 5" height="110">
+                    <p class="label">Oraple Gaussian #5</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/oraple_laplacian_0.jpg" alt="Oraple Laplacian 1" height="110">
+                    <p class="label">Oraple Laplacian #1</p>
+                </div>
+                <div class="image">
+                    <img src="images/oraple_laplacian_1.jpg" alt="Oraple Laplacian 2" height="110">
+                    <p class="label">Oraple Laplacian #2</p>
+                </div>
+                <div class="image">
+                    <img src="images/oraple_laplacian_2.jpg" alt="Oraple Laplacian 3" height="110">
+                    <p class="label">Oraple Laplacian #3</p>
+                </div>
+                <div class="image">
+                    <img src="images/oraple_laplacian_3.jpg" alt="Oraple Laplacian 4" height="110">
+                    <p class="label">Oraple Laplacian #4</p>
+                </div>
+                <div class="image">
+                    <img src="images/oraple_laplacian_4.jpg" alt="Oraple Laplacian 5" height="110">
+                    <p class="label">Oraple Laplacian #5</p>
+                </div>
+            </div>
+            <span class="description"><i>Visualization of Gaussian and Laplacian (normalized) stack of Szelski's Oraple image. </i></span>
+            <div class="images">
+                <div class="image">
+                    <img src="images/apple.jpeg" alt="Apple" height="250">
+                    <p class="label">Apple</p>
+                </div>
+                <div class="image">
+                    <img src="images/orange.jpeg" alt="Orange" height="250">
+                    <p class="label">Orange</p>
+                </div>
+                <div class="image">
+                    <img src="images/my_oraple.jpg" alt="Oraple" height="250">
+                    <p class="label">Oraple</p>
+                </div>
+            </div>
+            <span class="description"><i>Oraple created with a vertical split mask.</i></span>
+        </div>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/bowl1.jpg" alt="Bowl 1" height="250">
+                    <p class="label">Bowl 1</p>
+                </div>
+                <div class="image">
+                    <img src="images/bowl2.jpg" alt="Bowl 2" height="250">
+                    <p class="label">Bowl 2</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/bowl_mask.jpg" alt="Bowl Mask" height="250" style="border: 0.1px solid black;">
+                    <p class="label">Bowl Mask</p>
+                </div>
+                <div class="image">
+                    <img src="images/bowl_merged.jpg" alt="Bowl Merged" height="250">
+                    <p class="label">Bowl (Merged)</p>
+                </div>
+            </div>
+            <span class="description"><i>Mixed bowl for the indecisive.</i></span>
+        </div>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/car1.jpg" alt="Car 1" height="250">
+                    <p class="label">Car 1</p>
+                </div>
+                <div class="image">
+                    <img src="images/car2.jpg" alt="Car 2" height="250">
+                    <p class="label">Car 2</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/car_mask.jpg" alt="Car Mask" height="250" style="border: 0.1px solid black;">
+                    <p class="label">Car Mask</p>
+                </div>
+                <div class="image">
+                    <img src="images/car_merged.jpg" alt="Car Merged" height="250">
+                    <p class="label">Car (Merged)</p>
+                </div>
+            </div>
+            <span class="description"><i>A hybrid vehicle. The merge would have been better if the cars had similar color.</i></span>
+        </div>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/sofa.jpg" alt="Sofa" height="250">
+                    <p class="label">Sofa</p>
+                </div>
+                <div class="image">
+                    <img src="images/eyes.jpg" alt="Building with Eyes" height="250">
+                    <p class="label">Building with Eyes</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/sofa_mask.jpg" alt="Sofa Mask" height="250" style="border: 0.1px solid black;">
+                    <p class="label">Sofa Mask</p>
+                </div>
+                <div class="image">
+                    <img src="images/sofa_merged.jpg" alt="Sofa Merged" height="250">
+                    <p class="label">Sofa (Merged)</p>
+                </div>
+            </div>
+            <span class="description"><i>Application of custom mask on combining sofa and eyes.</i></span>
+        </div>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/tower1.jpg" alt="Tower 1" height="250">
+                    <p class="label">Tower 1</p>
+                </div>
+                <div class="image">
+                    <img src="images/tower2.jpg" alt="Tower 2?" height="250">
+                    <p class="label">Tower 2?</p>
+                </div>
+                <div class="image">
+                    <img src="images/tower_mask.jpg" alt="Tower Mask" height="250" style="border: 0.1px solid black;">
+                    <p class="label">Tower Mask</p>
+                </div>
+                <div class="image">
+                    <img src="images/tower_merged.jpg" alt="Tower Merged" height="250">
+                    <p class="label">Tower (Merged)</p>
+                </div>
+            </div>
+            <span class="description"><i>Towers merged together. The large difference in background makes the merge less seamless.</i></span>
+        </div>
+        
+        <h3>Sources</h3>
+        <ul>
+            <li><a id="frog-img" target="_blank" href="https://pin.it/2DreoGCE3">Black Rain Frog Image</a></li>
+            <li><a id="owl-img" target="_blank" href="https://www.reconnectwithnature.org/news-events/the-buzz/5-things-know-about-great-horned-owls/">Image of Owl</a></li>
+            <li><a id="earth-img" target="_blank" href="https://newsroom.ucla.edu/releases/earth-like-planets-may-be-an-inevitability">Image of Earth</a></li>
+        </ul>
+    </body>
+</html>
