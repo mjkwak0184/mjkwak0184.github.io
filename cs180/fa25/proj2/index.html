@@ -120,14 +120,97 @@
     <body onload="onload();">
         <h1>Fun with Filters and Frequencies</h1>
         <h2>Part I - Fun with Filters</h2>
+        <h3>Convolutions from Scratch</h3>
+        <p>
+            I first implemented the convolution operation from scratch just using numpy, with a box filter
+            of size 9x9. I implemented two versions of the convolution function: one with four nested loops
+            and one with two nested loops. The four-loop version iterates over each pixel in the output image
+            and then iterates over each element in the kernel to compute the convolution sum. The two-loop version
+            iterates over each pixel in the output image and then uses numpy's element-wise multiplication and
+            sum functions to compute the convolution sum. I compared the results of my implementations with 
+            SciPy's built-in <code>convolve2d</code> function to verify the correctness of my implementations.
+            For all convolved results, the images look more blurred than the original image since the box filter
+            averages the pixel values in the neighborhood of each pixel, as shown below.
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/original_image_gray.png" alt="Original Photo" height="220">
+                    <p class="label">Original Photo</p>
+                </div>
+                <div class="image">
+                    <img src="images/convolved_four_loops.png" alt="Convolved 4-loop" height="220">
+                    <p class="label">Convolved with 4 loop</p>
+                </div>
+                <div class="image">
+                    <img src="images/convolved_two_loops.png" alt="Convolved 2-loop" height="220">
+                    <p class="label">Convolved with 2 loop</p>
+                </div>
+                <div class="image">
+                    <img src="images/convolved_scipy.png" alt="Convolved SciPy" height="220">
+                    <p class="label">Convolved with SciPy</p>
+                </div>
+            </div>
+            <span class="description">
+                <i>
+                The convolved images look more blurry than the original image.
+                </i>
+            </span>
+        </div>
+        <p>
+            Here is the code for both convolution implementations:
+        </p>
+        <pre>
+            <code>
+def conv2d_four_loops(image, kernel):
+    image_height, image_width = image.shape
+    kernel_height, kernel_width = kernel.shape
+    pad_height = kernel_height // 2
+    pad_width = kernel_width // 2
+    
+    padded_image = np.pad(image, ((pad_height, pad_height), (pad_width, pad_width)), mode="constant", constant_values=0)
+    convolved_image = np.zeros_like(image)
+    
+    for y in range(image_height):
+        for x in range(image_width):
+            for i in range(kernel_height):
+                for j in range(kernel_width):
+                    convolved_image[y, x] += padded_image[y + i, x + j] * kernel[i, j]
+
+    return convolved_image
+
+def conv2d_two_loops(image, kernel):
+    image_height, image_width = image.shape
+    kernel_height, kernel_width = kernel.shape
+    pad_height = kernel_height // 2
+    pad_width = kernel_width // 2
+    
+    padded_image = np.pad(image, ((pad_height, pad_height), (pad_width, pad_width)), mode="constant", constant_values=0)
+    convolved_image = np.zeros_like(image)
+    
+    for y in range(image_height):
+        for x in range(image_width):
+            region = padded_image[y:y + kernel_height, x:x + kernel_width]
+            convolved_image[y, x] = np.sum(region * kernel)
+
+    return convolved_image
+
+image = load_image_grayscale("Me.jpg")
+box_filter = np.ones((9, 9)) / 81
+
+convolved_four_loops = conv2d_four_loops(image, box_filter)
+convolved_two_loops = conv2d_two_loops(image, box_filter)
+convolved_scipy = convolve2d(image, box_filter, mode="same", boundary="fill", fillvalue=0)
+            </code>
+        </pre>
         <h3>Finite Difference Operator</h3>
         <p>
             In this part, I explore how convolution kernel filters can be used to detect edges in an image.
             Knowing that an image is represented as a 2D array, it could be said that edges of an image are
             areas where the intensity of the pixels change rapidly. To detect these edges, we can use a filter
             that is sensitive to changes in intensity. One of the most simple filters that achieves this is the
-            filter \( \mathbf{D_x} = \left[ 1 \,\, -1 \right]\). This filter, when convolved with an image, will
-            highlight the vertical edges in the image. Similarly, the filter \( \mathbf{D_y} = \left[ 1 \,\, -1 \right]^T \)
+            filter \( \mathbf{D_x} = \left[ 1 \,\,\,0\,\, -1 \right]\). This filter, when convolved with an image, will
+            highlight the vertical edges in the image. Similarly, the filter \( \mathbf{D_y} = \left[ 1 \,\,\,0\,\, -1 \right]^T \)
             will highlight the horizontal edges in the image. Then, the gradient magnitude is computed by the following
             formula.
         </p>
@@ -315,6 +398,47 @@
             <span class="description"><i>Sharpened image of a chalkboard. Higher \(\alpha\) values make faint chalk marks more prominent.</i></span>
         </div>
 
+        <p>
+            I also used my sharpening implementation to sharpen a blurry image of a pizza. 
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/blurry_pizza.jpg" alt="Blurry Pizza" height="400">
+                    <p class="label">Blurry Pizza (Original)</p>
+                </div>
+                <div class="image">
+                    <img src="images/blurry_pizza_1.5.jpg" alt="Sharpened Pizza" height="400">
+                    <p class="label">Sharpened Pizza (\(\alpha = 1.5\))</p>
+                </div>
+            </div>
+            <span class="description"><i>Sharpened image of a blurry pizza. The sharpening process helps to recover some details in the image.</i></span>
+        </div>
+
+        <p>
+            Finally, I took a photo, blurred it, and re-sharpened the blurred image to see how well the
+            sharpening process can recover the original image. As shown below, the sharpening
+            process is able to make the edges more prominent, but it is not able to fully recover
+            the original image. This is because the blurring process removes some high-frequency
+            information from the image, and the sharpening process can only enhance the high-frequency
+            information that is still present after blurring.
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/street.jpg" alt="Street (Original)" height="300">
+                    <p class="label">Street (Original)</p>
+                </div>
+                <div class="image">
+                    <img src="images/street_low.jpg" alt="Blurry Street" height="300">
+                    <p class="label">Blurry Street</p>
+                </div>
+                <div class="image">
+                    <img src="images/street_low_2.jpg" alt="Sharpened Blurry Street" height="300">
+                    <p class="label">Sharpened Blurry Street (\(\alpha = 2.0\))</p>
+                </div>
+            </div>
+        </div>
         <h3>Hybrid Images</h3>
         <p>
             Hybrid images are images that look like one image up close and another image from a distance. This
@@ -326,8 +450,6 @@
             the low-pass image dominates the color, it adds more vibrancy to the image when it is viewed afar. However,
             in cases like Derek and Nutmeg hybrid image, Derek dominating the color can make Nutmeg less noticeable.
             The results of the hybrid images are shown below.
-            
-            
         </p>
         <div class="image-container">
             <div class="images">
