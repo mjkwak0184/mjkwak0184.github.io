@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>CS 180 Project 4</title>
+        <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
+        <style>
+
+            body {
+                padding: 20px;
+            }
+
+            .image-container, .image-selector {
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+            }
+
+            .image-container .description, .image-container .label, .image-selector .label, .image-selector .description {
+                text-align: center;
+            }
+
+            .image-container .description, .image-selector .description {
+                margin-bottom: 25px;
+            }
+
+            .math {
+                display: block;
+                width: 100%;
+                text-align: center;
+            }
+
+            .images {
+                display: flex;
+                justify-content: space-around;
+                align-items: center;
+            }
+            
+            select {
+                width: fit-content;
+                margin: 0 auto;
+                padding: 16px 26px;
+                font-size: 16pt;
+                margin-bottom: 20px;
+            }
+        </style>
+    </head>
+    <body onload="onload();">
+        <h1>Neural Radiance Field</h1>
+        <h3>Part 0. Calibrating Your Camera and Capturing a 3D Scan</h3>
+        <p>
+            To begin the project, I calibrated my camera and captured images of an object from multiple viewpoints to create a
+            3D scan. I used a printed ArUco tag for calibration as specified in the project instructions, which had a side length
+            of 0.06m. I ensured that the tag was clearly visible in all images to facilitate accurate pose estimation. Then, I took
+            photos of my chosen object from various angles while keeping the ArUco tag in the frame. For both calibration and object
+            images, I made sure to maintain consistent lighting conditions to minimize shadows and reflections that could affect
+            the calibration accuracy. After running calibration and pose estimation, I visualized the camera frustums in Viser to
+            verify the accuracy of the estimated poses. Below are screenshots of the camera frustums visualization from two different
+            angles.
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/part0_side.png" alt="Side View" height="320">
+                    <p class="label">Side View</p>
+                </div>
+                <div class="image">
+                    <img src="images/part0_dome.png" alt="Dome View" height="320">
+                    <p class="label">Dome View</p>
+                </div>
+            </div>
+            <span class="description"><i>
+                Camera frustums visualization from the top and the side.<br>
+                View from one side of the object is not fully captured since the object was blocking the tag.
+            </i></span>
+        </div>
+
+        <h3>Part 1. Fit a Neural Field to a 2D Image</h3>
+        <p>
+            For this part, I implemented a neural field model that renders a 2D image given pixel coordinates as input. This is
+            achieved using a Multilayer Perceptron (MLP) with Sinusoidal Positional Encoding (PE) to capture high-frequency details.
+            The model first runs the pixel coordinates through PE to expand their dimensionality, and then processes the input through
+            four hidden layers with ReLU activations. The final layer uses a Sigmoid activation to output RGB color values in the range [0, 1].
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/2d_nerf.jpg" alt="2D NeRF" height="200">
+                    <p class="label">2D NeRF Model Structure</p>
+                </div>
+            </div>
+        </div>
+        <p>
+            My model is a coordinate-based MLP that maps 2D pixel locations to RGB colors: <code>(x, y) ∈ [0,1]^2</code> &rarr; RGB color
+            <code>(r, g, b) ∈ [0,1]^3</code>. For the MLP architecture, I used a 4-layer fully-connected network with ReLU activations
+            in the hidden layers of width 64 or 256. To enable the network to learn high-frequency variations in the image, I applied
+            Sinusoidal Positional Encoding (PE) to the input coordinates before feeding them into the MLP. The PE function maps each
+            coordinate to a higher-dimensional space using sine and cosine functions at multiple frequencies. For each network model,
+            I used a learning rate of <code>1e-2</code> with the Adam optimizer and trained using Mean Squared Error (MSE) loss on RGB values.
+            My batch size was 10000 randomly sampled pixels per iteration. I tracked reconstruction quality using Peak Signal-to-Noise
+            Ratio (PSNR) computed from the MSE. I also experimented with different numbers of positional encoding frequencies,
+            specifically \(L=3\) and \(L=10\), to observe their effect on reconstruction quality.
+        </p>
+        <p>
+            Below are the training progressions for fitting the neural field to the provided coyote image, along with PSNR curves.
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/coyote_L3_W64_iter1.png" alt="Coyote L3 W64 Iter 1" height="200">
+                    <p class="label">Coyote L3 W64 Iter 1</p>
+                </div>
+                <div class="image">
+                    <img src="images/coyote_L3_W64_iter50.png" alt="Coyote L3 W64 Iter 50" height="200">
+                    <p class="label">Coyote L3 W64 Iter 50</p>
+                </div>
+                <div class="image">
+                    <img src="images/coyote_L3_W64_iter100.png" alt="Coyote L3 W64 Iter 100" height="200">
+                    <p class="label">Coyote L3 W64 Iter 100</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/coyote_L3_W64_iter500.png" alt="Coyote L3 W64 Iter 500" height="200">
+                    <p class="label">Coyote L3 W64 Iter 500</p>
+                </div>
+                <div class="image">
+                    <img src="images/coyote_L3_W64_iter1500.png" alt="Coyote L3 W64 Iter 1500" height="200">
+                    <p class="label">Coyote L3 W64 Iter 1500</p>
+                </div>
+                <div class="image">
+                    <img src="images/coyote_psnr_curve_L3_W64.png" alt="Coyote L3 W64 PSNR Curve" height="200">
+                    <p class="label">Coyote L3 W64 PSNR Curve</p>
+                </div>
+            </div>
+            <span class="description"><i>
+                Coyote reconstruction with \(L=3\) and \(width=64\)
+            </i></span>
+            <div class="images">
+                <div class="image">
+                    <img src="images/coyote_L10_W256_iter1.png" alt="Coyote L10 W256 Iter 1" height="200">
+                    <p class="label">Coyote L10 W256 Iter 1</p>
+                </div>
+                <div class="image">
+                    <img src="images/coyote_L10_W256_iter50.png" alt="Coyote L10 W256 Iter 50" height="200">
+                    <p class="label">Coyote L10 W256 Iter 50</p>
+                </div>
+                <div class="image">
+                    <img src="images/coyote_L10_W256_iter100.png" alt="Coyote L10 W256 Iter 100" height="200">
+                    <p class="label">Coyote L10 W256 Iter 100</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/coyote_L10_W256_iter500.png" alt="Coyote L10 W256 Iter 500" height="200">
+                    <p class="label">Coyote L10 W256 Iter 500</p>
+                </div>
+                <div class="image">
+                    <img src="images/coyote_L10_W256_iter1500.png" alt="Coyote L10 W256 Iter 1500" height="200">
+                    <p class="label">Coyote L10 W256 Iter 1500</p>
+                </div>
+                <div class="image">
+                    <img src="images/coyote_psnr_curve_L10_W256.png" alt="Coyote L10 W256 PSNR Curve" height="200">
+                    <p class="label">Coyote L10 W256 PSNR Curve</p>
+                </div>
+            </div>
+            <span class="description"><i>
+                Coyote reconstruction with \(L=10\) and \(width=256\)
+            </i></span>
+            <div class="images">
+                <div class="image">
+                    <img src="images/lighthouse_L10_W256_iter1.png" alt="Lighthouse L10 W256 Iter 1" height="350">
+                    <p class="label">Lighthouse L10 W256 Iter 1</p>
+                </div>
+                <div class="image">
+                    <img src="images/lighthouse_L10_W256_iter50.png" alt="Lighthouse L10 W256 Iter 50" height="350">
+                    <p class="label">Lighthouse L10 W256 Iter 50</p>
+                </div>
+                <div class="image">
+                    <img src="images/lighthouse_L10_W256_iter100.png" alt="Lighthouse L10 W256 Iter 100" height="350">
+                    <p class="label">Lighthouse L10 W256 Iter 100</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/lighthouse_L10_W256_iter500.png" alt="Lighthouse L10 W256 Iter 500" height="350">
+                    <p class="label">Lighthouse L10 W256 Iter 500</p>
+                </div>
+                <div class="image">
+                    <img src="images/lighthouse_L10_W256_iter1500.png" alt="Lighthouse L10 W256 Iter 1500" height="350">
+                    <p class="label">Lighthouse L10 W256 Iter 1500</p>
+                </div>
+                <div class="image">
+                    <div style="width:270; height:300px; display: flex; justify-content: center; align-items: center; overflow: hidden;">
+                        <img src="images/lighthouse_psnr_curve_L10_W256.png" alt="Lighthouse L10 W256 PSNR Curve" height="170">
+                    </div>
+                    <p class="label">Lighthouse L10 W256 PSNR Curve</p>
+                </div>
+            </div>
+            <span class="description"><i>
+                Lighthouse reconstruction with \(L=10\) and \(width=256\)
+            </i></span>
+        </div>
+        <p>
+            Here are the final reconstruction results for the four combinations of positional encoding frequency and hidden layer width:
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/coyote_L3_W64_iter1500.png" alt="Coyote Final L3 W64" height="300">
+                    <p class="label">Coyote L3 W64</p>
+                </div>
+                <div class="image">
+                    <img src="images/coyote_L3_W256_iter1500.png" alt="Coyote Final L3 W256" height="300">
+                    <p class="label">Coyote L3 W256</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/coyote_L10_W64_iter1500.png" alt="Coyote Final L10 W64" height="300">
+                    <p class="label">Coyote L10 W64</p>
+                </div>
+                <div class="image">
+                    <img src="images/coyote_L10_W256_iter1500.png" alt="Coyote Final L10 W256" height="300">
+                    <p class="label">Coyote L10 W256</p>
+                </div>
+            </div>
+            <span class="description"><i>
+                Final reconstruction results for Coyote image.<br>
+                L10/W64 produces more detailed image than L3/W256.
+            </i></span>
+            <div class="images">
+                <div class="image">
+                    <img src="images/lighthouse_L3_W64_iter1500.png" alt="Lighthouse Final L3 W64" height="600">
+                    <p class="label">Lighthouse L3 W64</p>
+                </div>
+                <div class="image">
+                    <img src="images/lighthouse_L3_W256_iter1500.png" alt="Lighthouse Final L3 W256" height="600">
+                    <p class="label">Lighthouse L3 W256</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/lighthouse_L10_W64_iter1500.png" alt="Lighthouse Final L10 W64" height="600">
+                    <p class="label">Lighthouse L10 W64</p>
+                </div>
+                <div class="image">
+                    <img src="images/lighthouse_L10_W256_iter1500.png" alt="Lighthouse Final L10 W256" height="600">
+                    <p class="label">Lighthouse L10 W256</p>
+                </div>
+            </div>
+            <span class="description"><i>
+                Final reconstruction results for Lighthouse image.
+            </i></span>
+        </div>
+        <h3>Part 2. Fit a Neural Radiance Field from Multi-view Images</h3>
+        <p>
+            In this part, I implemented a Neural Radiance Field (NeRF) to reconstruct a 3D scene from multiple images taken
+            from different viewpoints. The NeRF model predicts color and density at any point in 3D space by optimizing a
+            continuous volumetric scene representation. To that end, I created helper functions to convert pixel coordinates
+            to camera coordinates and then to rays in world space. The ray origin is the camera position, and the ray direction
+            is computed by transforming pixel coordinates through the camera intrinsics and extrinsics. I sampled rays from
+            multiple images and discretized them into points along each ray using uniform sampling with added perturbations to
+            avoid overfitting. 
+        </p>
+
+        <h4>Camera to World Coordinate Conversion</h4>
+        <p>
+            The function <code>transform_points</code> takes a 3D point \(\mathbf{x}_c\) in the camera's local coordinate system
+            and transforms it into the global world coordinate system, using the provided camera-to-world (<code>c2w</code>)
+            matrix. To do this, we convert the 3D point to homogeneous coordinates by adding a '1' as the fourth component.
+            Then, we perform a standard matrix multiplication. The resulting 3D world coordinate \(\mathbf{x}_w\) is the first
+            three components of \(\mathbf{\tilde{x}}_w\).
+        </p>
+        <p class="math">
+            \[
+            \mathbf{\tilde{x}}_c = \begin{bmatrix} x_c \\ y_c \\ z_c \\ 1 \end{bmatrix}
+            \quad
+            \mathbf{C2W} = \begin{bmatrix} 
+            r_{11} & r_{12} & r_{13} & t_x \\
+            r_{21} & r_{22} & r_{23} & t_y \\
+            r_{31} & r_{32} & r_{33} & t_z \\
+            0 & 0 & 0 & 1
+            \end{bmatrix}
+            = \begin{bmatrix} \mathbf{R} & \mathbf{t} \\ \mathbf{0} & 1 \end{bmatrix}
+            \]
+        </p>
+        <p class="math">
+            \[
+            \mathbf{\tilde{x}}_w = \mathbf{C2W} \cdot \mathbf{\tilde{x}}_c
+            \]
+        </p>
+
+        <h4>Pixel to Camera Coordinate Conversion</h4>
+        <p>
+            The function <code>pixel_to_camera</code> inverts the pinhole camera projection model. We are given a 2D pixel coordinate \((u, v)\) and the camera's intrinsic matrix \(\mathbf{K}\). We want to find the corresponding 3D point \((x_c, y_c, z_c)\) in the camera's coordinate system. The forward projection is:
+        </p>
+        <p class="math">
+            \[
+            s \begin{bmatrix} u \\ v \\ 1 \end{bmatrix} = \mathbf{K} \begin{bmatrix} x_c \\ y_c \\ z_c \end{bmatrix} = \begin{bmatrix} f_x & 0 & c_x \\ 0 & f_y & c_y \\ 0 & 0 & 1 \end{bmatrix} \begin{bmatrix} x_c \\ y_c \\ s \end{bmatrix}
+            \]
+        </p>
+        <p>
+            Assuming \(z_c = s\), we can rearrange to solve for \(x_c\) and \(y_c\):
+        </p>
+        <p class="math">
+            \[
+            x_c = \frac{u - c_x}{f_x} \cdot s
+            \]
+            \[
+            y_c = \frac{v - c_y}{f_y} \cdot s
+            \]
+            \[
+            z_c = s
+            \]
+        </p>
+        <h4>Pixel to Ray</h4>
+        <p>
+            For each pixel \((u, v)\), I want to recover a 3D ray in world space, written as an origin
+            \(\mathbf{r}_o\) and a direction \(\mathbf{r}_d\). Starting from the world-to-camera
+            extrinsics \([\mathbf{R} \mid \mathbf{t}]\), the camera center in world coordinates is
+        </p>
+        <p class="math">
+            \[
+            \mathbf{r}_o = -\mathbf{R}^{-1}\mathbf{t}.
+            \]
+        </p>
+        <p>
+            I then back-project the pixel through the intrinsics to get a point \(\mathbf{X}_w\) on the
+            ray (e.g., at unit depth), and define the ray direction as the normalized vector from the
+            camera center to that point:
+        </p>
+        <p class="math">
+            \[
+            \mathbf{r}_d = 
+            \frac{\mathbf{X}_w - \mathbf{r}_o}
+                 {\left\lVert \mathbf{X}_w - \mathbf{r}_o \right\rVert_2 }.
+            \]
+        </p>
+        <h4>Dataloader</h4>
+        <p>
+            I created a <code>RaysData</code> class to handle loading the multi-view images, camera intrinsics,
+            and extrinsics. This class computes the rays for all pixels in all training images and stores
+            them for efficient sampling during training. The rays are represented by their origins and directions,
+            along with the corresponding pixel colors. I visualized a subset of rays and sampled points along them
+            using Viser, as shown below.
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/lego_rays_plot1.png" alt="Lego Rays" height="300">
+                    <p class="label">Lego Rays</p>
+                </div>
+                <div class="image">
+                    <img src="images/lego_rays_plot2.png" alt="Ray sampled from one camera" height="300">
+                    <p class="label">Ray sampled from one camera</p>
+                </div>
+            </div>
+        </div>
+        <h4>Neural Radiance Field</h4>
+        <p>
+        For Part 2.4, I implemented a NeRF MLP that takes 3D world coordinates and view directions and outputs density
+        and RGB color. I used the network architecture depicted below:
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/mlp_nerf.png" alt="NeRF MLP Structure" height="300">
+                    <p class="label">NeRF MLP Structure</p>
+                </div>
+            </div>
+        </div>
+        <p>
+            As shown above, I first applied sinusoidal positional encoding to the 3D points and ray directions. 
+            Then, I fed the encoded positions into a deep MLP with a skip connection that concatenates the input back 
+            in the middle layers. The network has two output heads: one with ReLU activation to predict density \(\sigma\),
+            and another with Sigmoid activation to predict RGB color in the range [0, 1].
+        </p>
+
+        <h4>Volume Rendering</h4>
+        <p>
+        In Part 2.5, I implemented the NeRF volume rendering equation in PyTorch:
+        </p>
+        <ul>
+        <li>Given <code>sigmas (B, N, 1)</code> and <code>rgbs (B, N, 3)</code>, compute
+            <code>alpha = 1 - exp(-sigma * step_size)</code>.</li>
+        <li>Use <code>cumprod</code> to get transmittance <code>T</code>, then weights
+            <code>w = alpha * T</code> for each sample.</li>
+        <li>Compute the final pixel color per ray as
+            <code>sum(w[..., None] * rgbs, dim=1)</code>.</li>
+        </ul>
+        <p>
+            To train the NeRF model, I used the Adam optimizer with a learning rate of \(5 \times 10^{-4}\).
+            I sampled 4096 rays per iteration from the training images and discretized each ray into 64 points
+            using stratified sampling between near and far bounds of 2.0 and 6.0. The loss function was the mean
+            squared error (MSE) between the rendered pixel colors and the ground truth pixel colors.
+            Below are visualizations of the training progression at various iterations, along with the
+            PSNR curve on the validation image.
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/lego_100.png" alt="Lego Iteration 100" height="300">
+                    <p class="label">Lego Iteration 100</p>
+                </div>
+                <div class="image">
+                    <img src="images/lego_500.png" alt="Lego Iteration 500" height="300">
+                    <p class="label">Lego Iteration 500</p>
+                </div>
+                <div class="image">
+                    <img src="images/lego_1500.png" alt="Lego Iteration 1500" height="300">
+                    <p class="label">Lego Iteration 1500</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/lego_3000.png" alt="Lego Iteration 3000" height="300">
+                    <p class="label">Lego Iteration 3000</p>
+                </div>
+                <div class="image">
+                    <img src="images/lego_psnr.png" alt="Lego PSNR" height="300">
+                    <p class="label">Lego PSNR</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/lego_render_360.gif" alt="Lego 360 Render" height="300">
+                    <p class="label">Lego 360 Render</p>
+                </div>
+            </div>
+        </div>
+        <p>
+            I also trained a NeRF model for my own object of a soda can using the multi-view images I captured.
+            I used a similar training setup as before, but with 10000 rays sampled per iteration and with 10000 iterations.
+            The training process involved minimizing the MSE loss between the rendered pixel colors and the ground truth pixel
+            colors from the images. Below are visualizations of the training progression at various iterations, along with the
+            PSNR curve on the validation set. For this object, I had to adjust the near and far values to 0.05 and 1.0 to better
+            capture the scene depth.
+        </p>
+        <div class="image-container">
+            <div class="images">
+                <div class="image">
+                    <img src="images/coke_iter_100.png" alt="Coke Iteration 100" height="200">
+                    <p class="label">Coke Iteration 100</p>
+                </div>
+                <div class="image">
+                    <img src="images/coke_iter_500.png" alt="Coke Iteration 500" height="200">
+                    <p class="label">Coke Iteration 500</p>
+                </div>
+                <div class="image">
+                    <img src="images/coke_iter_1500.png" alt="Coke Iteration 1500" height="200">
+                    <p class="label">Coke Iteration 1500</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/coke_iter_5000.png" alt="Coke Iteration 5000" height="200">
+                    <p class="label">Coke Iteration 5000</p>
+                </div>
+                <div class="image">
+                    <img src="images/coke_iter_10000.png" alt="Coke Iteration 10000" height="200">
+                    <p class="label">Coke Iteration 10000</p>
+                </div>
+            </div>
+            <div class="images">
+                <div class="image">
+                    <img src="images/coke_render_360.gif" alt="Coke 360 Render" height="300">
+                    <p class="label">Coke 360 Render</p>
+                </div>
+                <div class="image">
+                    <img src="images/coke_psnr.png" alt="Coke PSNR" height="300">
+                    <p class="label">Coke PSNR</p>
+                </div>
+            </div>
+        </div>
+    </body>
+</html>
